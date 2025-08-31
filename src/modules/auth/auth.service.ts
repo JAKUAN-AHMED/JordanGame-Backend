@@ -42,6 +42,8 @@ const createUser = async (userData: TUser) => {
     console.log('❌ Invalid email format');
   }
 
+  // const user=userData;
+  // console.log('user rug',user)
   const user = await User.create(userData);
   //create verification email token
   const verificationToken = await TokenService.createVerifyEmailToken(user);
