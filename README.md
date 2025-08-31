@@ -1,6 +1,6 @@
 # Lomi Dating Ap
 
-This is a # Lomi Dating Ap
+This is a # StoryTelling Website
 
 ## Features
 

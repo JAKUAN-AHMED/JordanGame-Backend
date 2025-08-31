@@ -39,7 +39,7 @@ const userSchema = new Schema<TUser, UserModal>(
       type: Boolean,
       default: false,
     },
-
+    phone:{type:String,required:false},
     lastPasswordChange: { type: Date },
     isResetPassword: {
       type: Boolean,
