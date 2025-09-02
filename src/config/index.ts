@@ -72,6 +72,16 @@ export const config = {
 
   backend: {
     ip: process.env.BACKEND_IP || '10.0.60.220',
-    baseUrl: `http://${process.env.BACKEND_IP}:${process.env.PORT}`,
+    // baseUrl: `http://${process.env.BACKEND_IP}:${process.env.PORT}`,
+    baseUrl: `http://localhost:${process.env.PORT}`,
+    server_name: process.env.SERVER_NAME
   },
+  provider:{
+    google_client_id:process.env.GOOGLE_CLIENT_ID,
+    google_client_secret:process.env.GOOGLE_CLIENT_SECRET,
+    google_callback_url:process.env.GOOGLE_CALLBACK_URL,
+    facebook_client_id:process.env.FB_APP_ID,
+    facebook_client_secret:process.env.FB_APP_SECRET,
+    facebook_callback_url:process.env.FACEBOOK_CALLBACK_URL,
+  }
 };

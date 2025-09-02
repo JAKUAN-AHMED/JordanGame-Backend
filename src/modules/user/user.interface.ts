@@ -8,12 +8,10 @@ export type TProfileImage = {
 };
 
 
-
-
 export type TUser = {
   _id: Types.ObjectId;
   email: string;
-  password: string;
+  password?: string;
   confirmpassword?: string;
   phone:string;
   role: Role;
@@ -25,6 +23,11 @@ export type TUser = {
   createdAt: Date;
   updatedAt: Date;
   profileId?:Types.ObjectId | null;
+
+ //social login fields
+  provider?: "google" | "facebook" | "local";
+  providerId?: string;
+  fname?: string;
 };
 
 

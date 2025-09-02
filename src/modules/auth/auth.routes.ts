@@ -4,6 +4,7 @@ import validateRequest from '../../shared/validateRequest';
 import { UserValidation } from '../user/user.validation';
 import { AuthValidation } from './auth.validations';
 import auth from '../../middlewares/auth';
+import passport from 'passport';
 
 const router = Router();
 router.post(
@@ -48,5 +49,24 @@ router.post(
 router.post('/logout', AuthController.logout);
 
 router.post('/refresh-token', AuthController.refreshToken);
+
+//social login
+
+
+// Google login
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: "/login" }),
+  AuthController.googleCallback
+);
+
+// Facebook login
+router.get("/facebook", passport.authenticate("facebook", { scope: ["email"] }));
+router.get(
+  "/facebook/callback",
+  passport.authenticate("facebook", { session: false, failureRedirect: "/login" }),
+  AuthController.facebookCallback
+);
 
 export const AuthRoutes = router;

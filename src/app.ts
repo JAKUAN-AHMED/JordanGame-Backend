@@ -8,6 +8,8 @@ import router from './routes';
 import { Morgan } from './shared/morgen';
 import i18next from './i18n/i18n'; // Import the i18next configuration
 import i18nextMiddleware from 'i18next-express-middleware';
+import passport from "./config/passport";
+// import session from "express-session";
 
 const app = express();
 
@@ -39,6 +41,11 @@ app.use(i18nextMiddleware.handle(i18next));
 
 // router
 app.use('/api/v1', router);
+
+// Middleware`
+// app.use(session({ secret: "secret-key", resave: false, saveUninitialized: false }));
+app.use(passport.initialize());
+// app.use(passport.session());
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 

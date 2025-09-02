@@ -3,6 +3,8 @@ import catchAsync from '../../shared/catchAsync';
 import sendResponse from '../../shared/sendResponse';
 import { AuthService } from './auth.service';
 import AppError from '../../errors/AppError';
+import { TokenService } from '../token/token.service';
+import { TUser } from '../user/user.interface';
 
 // register
 const register = catchAsync(async (req, res) => {
@@ -64,7 +66,10 @@ const forgotPassword = catchAsync(async (req, res) => {
 });
 
 const changePassword = catchAsync(async (req, res) => {
-  const { userId } = req.user;
+  if (!req.user || typeof (req.user as any).userId === 'undefined') {
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+  }
+  const { userId } = req.user as { userId: string };
   const { currentPassword, newPassword } = req.body;
   const result = await AuthService.changePassword(
     userId,
@@ -117,6 +122,30 @@ const refreshToken = catchAsync(async (req, res) => {
   });
 });
 
+
+//SOCIAL
+
+const googleCallback = catchAsync(async (req, res) => {
+  const user = req.user;
+  const tokens = await TokenService.accessAndRefreshToken(user as TUser);
+
+  sendResponse(res,{
+    message:`Welcome Home`,
+    code:200,
+    data:{user,tokens}
+  })
+});
+
+const facebookCallback =catchAsync (async (req, res) => {
+  const user = req.user;
+  const tokens = await TokenService.accessAndRefreshToken(user as TUser);
+
+  sendResponse(res,{
+    message:`Welcome Home`,
+    code:200,
+    data:{user,tokens}
+  })
+});
 export const AuthController = {
   register,
   login,
@@ -127,4 +156,6 @@ export const AuthController = {
   refreshToken,
   forgotPassword,
   resetPassword,
+  googleCallback,
+  facebookCallback
 };

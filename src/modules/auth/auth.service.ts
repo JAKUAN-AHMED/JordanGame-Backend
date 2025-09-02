@@ -70,7 +70,7 @@ const login = async (email: string, reqpassword: string) => {
     );
   }
 
-  const isPasswordValid = await bcrypt.compare(reqpassword, user.password);
+  const isPasswordValid = await bcrypt.compare(reqpassword, user?.password as string);
   if (!isPasswordValid) {
     user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
     if (user.failedLoginAttempts >= config.auth.maxLoginAttempts) {
@@ -187,7 +187,7 @@ const changePassword = async (
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
-  const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  const isPasswordValid = await bcrypt.compare(currentPassword, user?.password as string);
 
   if (!isPasswordValid) {
     throw new AppError(StatusCodes.UNAUTHORIZED, 'Password is incorrect');

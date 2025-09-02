@@ -1,5 +1,6 @@
 import path from 'path';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import { config } from '../config';
 const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, label, printf } = format;
 
@@ -26,7 +27,7 @@ const myFormat = printf(
 
 const logger = createLogger({
   level: 'info',
-  format: combine(label({ label: 'SERVER-NAME' }), timestamp(), myFormat),
+  format: combine(label({ label: `${config.backend.server_name}` }), timestamp(), myFormat),
   transports: [
     new transports.Console(),
     new DailyRotateFile({
