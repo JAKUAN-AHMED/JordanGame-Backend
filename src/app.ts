@@ -47,11 +47,12 @@ app.use('/api/v1', router);
 app.use(passport.initialize());
 // app.use(passport.session());
 
+
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // live response
 app.get('/test', (req: Request, res: Response) => {
-  res.status(201).json({ message: req.t('welcome') });
+  res.status(201).json({ message: "Welcome" });
 });
 
 app.get('/test/:lang', (req: Request, res: Response) => {
@@ -63,7 +64,7 @@ app.get('/test/:lang', (req: Request, res: Response) => {
   console.log(`Current language: ${i18next.language}`); // Log the current language
 
   // Send the translated response
-  res.status(200).json({ message: req.t('welcome') }); // Get translated 'welcome' message
+  res.status(200).json({ message: "Welcome" }); // Get translated 'welcome' message
 });
 
 // global error handle

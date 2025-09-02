@@ -44,6 +44,9 @@ const createUser = async (userData: TUser) => {
 
   // const user=userData;
   // console.log('user rug',user)
+
+  const password=await bcrypt.hash(userData.password as string,10 as number);
+  userData.password=password;
   const user = await User.create(userData);
   //create verification email token
   const verificationToken = await TokenService.createVerifyEmailToken(user);

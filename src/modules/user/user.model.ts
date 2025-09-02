@@ -47,7 +47,7 @@ const userSchema = new Schema<TUser, UserModal>(
     providerId: { type: String },
     fname: { type: String },
   },
-  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+  { timestamps: true }
 );
 
 

@@ -4,7 +4,7 @@ import fs from 'fs';
 import { User } from '../user/user.model';
 import { sendWelcomeEmail } from '../../helpers/emailService';
 import { ICsvRow } from '../user/user.interface';
-import { TCurrentStatus, TProfileVisibility, TUserStatus, UserCurrentStatus, UserStatus, UserVisibility } from '../user/user.constant';
+import {TUserStatus, UserStatus } from '../user/user.constant';
 
 const processCsvFile = async (file: Express.Multer.File): Promise<{
   successCount: number;

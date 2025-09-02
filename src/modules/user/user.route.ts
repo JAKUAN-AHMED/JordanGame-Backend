@@ -2,11 +2,13 @@ import { SetUpProfileController } from './../profile/profile.controller';
 import express from 'express';
 import { UserController } from './user.controller';
 import auth from '../../middlewares/auth';
+import { upload } from '../../helpers/File/FileUpload';
+import validateRequest from '../../shared/validateRequest';
 
 
-import { upload } from '../../utils/uploadToaws';
-// const UPLOADS_FOLDER = 'uploads/users';
-// const upload = fileUploadHandler(UPLOADS_FOLDER);
+
+
+
 
 const router = express.Router();
 
@@ -16,14 +18,14 @@ router.route('/all-user').get(auth('common'), UserController.getAllUsers);
 router
   .route('/single-user/:userId')
   .get(auth('common'), UserController.getSingleUser)
-  
+
 
 
 // Upload profile (with file)
 router.post(
   '/profile/create',
   auth('common'),
-  upload.single('file'),
+  upload.single("avatar"),
   SetUpProfileController.SetUpProfile
 );
 

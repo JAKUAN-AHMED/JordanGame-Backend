@@ -91,15 +91,15 @@ const createResetPasswordToken = async (user: TUser) => {
 };
 
 const accessAndRefreshToken = async (user: TUser) => {
-  const payload = { userId: user._id, email: user.email, role: user.role,name:user.fname };
+  const payload = { userId: user._id, email: user.email, role: user.role, name: user.fname };
   await Token.deleteMany({ user: user._id });
   const accessToken = createToken(
-    payload,
+    payload as JwtPayload,
     config.jwt.accessSecret,
     config.jwt.accessExpiration
   );
   const refreshToken = createToken(
-    payload,
+    payload as JwtPayload,
     config.jwt.refreshSecret,
     config.jwt.refreshExpiration
   );

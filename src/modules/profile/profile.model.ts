@@ -1,14 +1,18 @@
-import { model, Schema } from 'mongoose';
+import { model, Schema, Types } from 'mongoose';
 import { Profile, TUserProfile } from './profile.interface';
 
 
 const profileSchema = new Schema<TUserProfile, Profile>(
   {
+    _id:{
+      type:Schema.Types.ObjectId,
+      default: () => new Types.ObjectId(),
+    },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     aboutself: { type: String, required: true },
     gender: {
       type: String,
-      enum: ['Male', 'Female'],
+      enum: ['Male', 'Female','Other'],
       required: [true, 'Gender is required'],
     },
     avatar:{
@@ -24,7 +28,6 @@ const profileSchema = new Schema<TUserProfile, Profile>(
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
   }
 );
 

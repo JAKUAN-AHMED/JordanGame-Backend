@@ -7,7 +7,7 @@ export type TPhotoGallery = {
   file: Record<string, any>;
 };
 
-export type GENDER = 'Male' | 'Female';
+export type GENDER = 'Male' | 'Female' | 'Other';
 export type TUserProfile = {
   _id: Types.ObjectId;
   user: Types.ObjectId;

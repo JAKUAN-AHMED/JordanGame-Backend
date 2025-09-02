@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { Secret } from 'jsonwebtoken';
+import { JwtPayload, Secret } from 'jsonwebtoken';
 import { roleRights } from './roles';
 import { User } from '../modules/user/user.model';
 import AppError from '../errors/AppError';
@@ -24,7 +24,7 @@ const auth = (...roles: string[]) =>
       TokenType.ACCESS ? TokenType.ACCESS : TokenType.REFRESH
     );
     // Step 3: Attach user to the request object
-    req.user = verifyUser;
+    req.user= verifyUser;
 
     // Step 4: Check if the user exists and is active
     const user = await User.findById(verifyUser.userId);

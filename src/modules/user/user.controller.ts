@@ -28,7 +28,7 @@ const getAllUsers = catchAsync(async (req, res) => {
 
 //get single user from database
 const getSingleUser = catchAsync(async (req, res) => {
-  const { userId } = req.params;
+  const {userId} = req.verifyUser;
   const result = await UserService.getSingleUser(userId);
   sendResponse(res, {
     code: StatusCodes.OK,
