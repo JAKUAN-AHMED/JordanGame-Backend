@@ -35,7 +35,7 @@ const login = catchAsync(async (req, res) => {
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
-  const {userId} = req.user;
+  const {userId} = req.User;
   const { email, token, otp } = req.body;
   const result = await AuthService.verifyEmail(email, token, otp);
   sendResponse(res, {
@@ -66,10 +66,10 @@ const forgotPassword = catchAsync(async (req, res) => {
 });
 
 const changePassword = catchAsync(async (req, res) => {
-  if (!req.user || typeof (req.user as any).userId === 'undefined') {
+  if (!req.User || typeof (req.User as any).userId === 'undefined') {
     throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
   }
-  const { userId } = req.user as { userId: string };
+  const { userId } = req.User as { userId: string };
   const { currentPassword, newPassword } = req.body;
   const result = await AuthService.changePassword(
     userId,
@@ -127,6 +127,7 @@ const refreshToken = catchAsync(async (req, res) => {
 
 const googleCallback = catchAsync(async (req, res) => {
   const user = req.user;
+  console.log("user",user);
   const tokens = await TokenService.accessAndRefreshToken(user as TUser);
 
   sendResponse(res,{

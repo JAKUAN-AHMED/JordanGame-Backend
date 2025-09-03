@@ -7,7 +7,7 @@ import { User } from '../user/user.model';
 import AppError from '../../errors/AppError';
 
 const getAllChatsByUserId = catchAsync(async (req, res) => {
-  const senderId = req.user.userId;
+  const senderId = req.User.userId;
   const filters = pick(req.query, ['chatName']);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'populate']);
   filters.senderId = senderId;
@@ -20,7 +20,7 @@ const getAllChatsByUserId = catchAsync(async (req, res) => {
 });
 
 const createSingleChat = catchAsync(async (req, res) => {
-  const senderId = req.user._id;
+  const senderId = req.User._id;
   const { receiverId } = req.body;
   if (!receiverId) {
     throw new Error('Receiver ID is required');
@@ -38,7 +38,7 @@ const createSingleChat = catchAsync(async (req, res) => {
 });
 
 const createGroupChat = catchAsync(async (req, res) => {
-  const userId = req.user._id;
+  const userId = req.User._id;
   const { chatName, participantIds } = req.body;
   const chat = await ChatService.createGroupChatService(
     chatName,

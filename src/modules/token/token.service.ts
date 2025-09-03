@@ -51,8 +51,8 @@ const verifyToken = async (
 };
 
 const createVerifyEmailToken = async (user: TUser) => {
-  const payload = { userId: user._id, email: user.email, role: user.role };
-  await Token.deleteMany({ user: user._id });
+  const payload = { userId: user?._id, email: user.email, role: user.role };
+  await Token.deleteMany({ user: user?._id });
   const verifyEmailToken = createToken(
     payload,
     config.token.TokenSecret,
@@ -62,7 +62,7 @@ const createVerifyEmailToken = async (user: TUser) => {
 
   await Token.create({
     token: verifyEmailToken,
-    user: user._id,
+    user: user?._id,
     type: TokenType.VERIFY,
     expiresAt,
   });
@@ -70,8 +70,8 @@ const createVerifyEmailToken = async (user: TUser) => {
 };
 
 const createResetPasswordToken = async (user: TUser) => {
-  const payload = { userId: user._id, email: user.email, role: user.role };
-  await Token.deleteMany({ user: user._id });
+  const payload = { userId: user?._id, email: user.email, role: user.role };
+  await Token.deleteMany({ user: user?._id });
   const resetPasswordToken = createToken(
     payload,
     config.token.TokenSecret,
@@ -83,7 +83,7 @@ const createResetPasswordToken = async (user: TUser) => {
 
   await Token.create({
     token: resetPasswordToken,
-    user: user._id,
+    user: user?._id,
     type: TokenType.RESET_PASSWORD,
     expiresAt,
   });
@@ -91,8 +91,15 @@ const createResetPasswordToken = async (user: TUser) => {
 };
 
 const accessAndRefreshToken = async (user: TUser) => {
-  const payload = { userId: user._id, email: user.email, role: user.role, name: user.fname };
-  await Token.deleteMany({ user: user._id });
+  if(!user)
+  {
+    throw new AppError(404,'User Not Found');
+  }
+  if (!user || !user.email) {
+    throw new Error("Email is required for token generation. User: " + JSON.stringify(user));
+  }
+  const payload = { userId: user?._id, email: user.email, role: user.role, name: user.fname };
+  await Token.deleteMany({ user: user?._id });
   const accessToken = createToken(
     payload as JwtPayload,
     config.jwt.accessSecret,
@@ -105,13 +112,13 @@ const accessAndRefreshToken = async (user: TUser) => {
   );
   await Token.create({
     token: accessToken,
-    user: user._id,
+    user: user?._id,
     type: TokenType.ACCESS,
     expiresAt: getExpirationTime(config.jwt.accessExpiration),
   });
   await Token.create({
     token: refreshToken,
-    user: user._id,
+    user: user?._id,
     type: TokenType.REFRESH,
     expiresAt: getExpirationTime(config.jwt.refreshExpiration),
   });

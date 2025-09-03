@@ -8,7 +8,7 @@ import { notificationFilters } from './notification.constants';
 const getALLNotification = catchAsync(async (req, res) => {
   const filters = pick(req.query, notificationFilters);
   const options = pick(req.query, ['sortBy', 'limit', 'page', 'populate']);
-  const userId = req.user.id;
+  const userId = req.User.id;
   const result = await NotificationService.getALLNotification(
     filters,
     options,
@@ -66,7 +66,7 @@ const deleteNotification = catchAsync(async (req, res) => {
 });
 
 const clearAllNotification = catchAsync(async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.User.id;
   await NotificationService.clearAllNotification(userId);
   sendResponse(res, {
     code: StatusCodes.OK,

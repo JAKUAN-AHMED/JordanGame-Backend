@@ -5,7 +5,7 @@ import { User } from './user.model';
 import { Types } from 'mongoose';
 import { TokenService } from '../token/token.service';
 import { OtpService } from '../otp/otp.service';
-import { NotFound } from '../../utils/utils';
+
 
 
 
@@ -37,7 +37,6 @@ const getSingleUser = async (userId: string): Promise<TUser | null> => {
     {
       $match: {
         _id: new Types.ObjectId(userId),
-        'status.isDeleted': false,
       },
     },
     {
@@ -57,25 +56,6 @@ const getSingleUser = async (userId: string): Promise<TUser | null> => {
 
 
 
-const getMyProfile = async (userId: string): Promise<TUser | null> => {
-  const result = await User.findById(userId);
-
-  if (!result) {
-    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-  }
-
-  return result;
-};
-const deleteMyProfile = async (userId: string): Promise<TUser | null> => {
-  const result = await User.findById(userId);
-
-  await NotFound(result, 'User Not Found');
-  const res = await User.findByIdAndDelete(
-    userId
-  );
-
-  return res;
-};
 
 const getAllUsers = async (query: any) => {
   const page = Number(query.page) || 1;
@@ -83,11 +63,6 @@ const getAllUsers = async (query: any) => {
   const skip = (page - 1) * limit;
 
   const users = await User.aggregate([
-    {
-      $match: {
-        'status.isDeleted': false,
-      },
-    },
     {
       $lookup: {
         from: 'profiles', // collection name
@@ -135,6 +110,4 @@ export const UserService = {
   createAdminOrSuperAdmin,
   getAllUsers,
   getSingleUser,
-  getMyProfile,
-  deleteMyProfile,
 };

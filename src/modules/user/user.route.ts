@@ -3,10 +3,6 @@ import express from 'express';
 import { UserController } from './user.controller';
 import auth from '../../middlewares/auth';
 import { upload } from '../../helpers/File/FileUpload';
-import validateRequest from '../../shared/validateRequest';
-
-
-
 
 
 
@@ -29,6 +25,15 @@ router.post(
   SetUpProfileController.SetUpProfile
 );
 
+
+//[profile]
+router.route('/profile')
+  .get(auth('common'), SetUpProfileController.myProfile)
+  .patch(auth('common'),
+    upload.single('avatar'),
+    SetUpProfileController.updateProfile
+  )
+  .delete(auth('common'),SetUpProfileController.deleteProfile)
 
 //make admin
 router.post(

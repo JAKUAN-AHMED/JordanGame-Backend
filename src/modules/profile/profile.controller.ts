@@ -6,7 +6,7 @@ import { profileServices } from './profile.service';
 
 const SetUpProfile = catchAsync(async (req, res) => {
 
- const user = req.user;
+  const user = req.User;
   if (!user) {
     return sendResponse(res, {
       code: 404,
@@ -15,15 +15,21 @@ const SetUpProfile = catchAsync(async (req, res) => {
     });
   }
 
-  req.body.user = user.userId ;
+  req.body.user = user.userId;
   let filePath: string | null = null;
 
   if (!req.file) {
     throw new AppError(404, 'fILE IS REQUIRED HERE~!')
   }
-  filePath = `http://localhost:8000/uploads/${req.file.filename}`;
-
-  req.body.avatar = filePath as string;
+  let imageUrl: string = '';
+  if (req.file) {
+    imageUrl = `${process.env.BACKEND_LIVE_URL}/uploads/users/${req.file.originalname}`;
+    // const { location } = await uploadToDigitalOceanAWS(file);
+    // imageUrl = location;
+  }
+  if (imageUrl) {
+    req.body.avatar = imageUrl;
+  }
 
   const result = await profileServices.SetUpProfile(req.body);
   // const result = "hello";
@@ -36,6 +42,48 @@ const SetUpProfile = catchAsync(async (req, res) => {
 });
 
 
+const updateProfile = catchAsync(async (req, res) => {
+  let imageUrl = '';
+  if (req.file) {
+    imageUrl = `${process.env.BACKEND_LIVE_URL}/uploads/users/${req.file.originalname}`;
+    req.body.avatar = imageUrl as string;
+  }
+  console.log("profile", req.User.userId);
+
+  const result = await profileServices.updateProfile(req.User.userId, req.body);
+  const isok = result ? true : false;
+  sendResponse(res, {
+    message: isok ? 'Successfully set updated profile ' : "something went wrong",
+    code: isok ? 200 : 400,
+    data: isok ? result : []
+  })
+})
+
+
+const myProfile = catchAsync(async (req, res) => {
+
+  const result = await profileServices.myProfile(req.User.userId);
+  const isok = result ? true : false;
+  sendResponse(res, {
+    message: isok ? 'Successfully retrieved my profile ' : "something went wrong",
+    code: isok ? 200 : 400,
+    data: isok ? result : []
+  })
+})
+
+const deleteProfile = catchAsync(async (req, res) => {
+  const result = await profileServices.deleteProfile(req.User.userId as string);
+  const isok = result ? true : false;
+  sendResponse(res, {
+    message: isok ? 'Successfully deleted profile ' : "something went wrong",
+    code: isok ? 200 : 404,
+    data: isok ? result : []
+  })
+})
+
 export const SetUpProfileController = {
   SetUpProfile,
+  myProfile,
+  updateProfile,
+  deleteProfile
 };

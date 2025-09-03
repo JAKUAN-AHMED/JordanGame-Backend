@@ -54,14 +54,14 @@ router.post('/refresh-token', AuthController.refreshToken);
 
 
 // Google login
-// router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-// router.get(
-//   "/google/callback",
-//   passport.authenticate("google", { session: false, failureRedirect: "/login" }),
-//   AuthController.googleCallback
-// );
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: "/login" }),
+  AuthController.googleCallback
+);
 
-// // Facebook login
+// Facebook login
 // router.get("/facebook", passport.authenticate("facebook", { scope: ["email"] }));
 // router.get(
 //   "/facebook/callback",

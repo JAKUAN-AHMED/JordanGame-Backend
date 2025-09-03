@@ -22,7 +22,7 @@ const getAllMessagesByChatId = catchAsync(async (req, res) => {
 });
 
 const sendMessage = catchAsync(async (req, res) => {
-  const senderId = req.user.userId;
+  const senderId = req.User.userId;
   const { message, receiverId } = req.body;
 
   // Check if the chat already exists between the sender and receiver
@@ -84,7 +84,7 @@ const sendMessage = catchAsync(async (req, res) => {
 });
 
 const markMessageSeen = catchAsync(async (req, res) => {
-  const { userId } = req.user;
+  const { userId } = req.User;
   const { messageId } = req.params;
   const result = await MessageService.markMessageSeen(messageId, userId);
   sendResponse(res, {
