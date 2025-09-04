@@ -38,7 +38,7 @@ router.route('/profile')
 //make admin
 router.post(
   '/admin',
-  auth('admin', 'superadmin'),
+  auth('user', 'superadmin'),
   UserController.createAdminOrSuperAdmin
 );
 

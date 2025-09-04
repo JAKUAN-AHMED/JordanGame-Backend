@@ -35,7 +35,6 @@ const login = catchAsync(async (req, res) => {
 });
 
 const verifyEmail = catchAsync(async (req, res) => {
-  const {userId} = req.User;
   const { email, token, otp } = req.body;
   const result = await AuthService.verifyEmail(email, token, otp);
   sendResponse(res, {

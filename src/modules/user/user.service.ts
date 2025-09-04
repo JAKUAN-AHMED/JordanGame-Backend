@@ -5,7 +5,7 @@ import { User } from './user.model';
 import { Types } from 'mongoose';
 import { TokenService } from '../token/token.service';
 import { OtpService } from '../otp/otp.service';
-
+import bcrypt from 'bcrypt';
 
 
 
@@ -19,7 +19,7 @@ const createAdminOrSuperAdmin = async (payload: TUser) => {
     first_name: 'New',
     last_name: ` ${payload.role === 'admin' ? 'Admin' : 'Super Admin'}`,
     email: payload.email,
-    password: payload.password,
+    password:await  bcrypt.hash(payload.password as any,10),
     role: payload.role,
   });
 
