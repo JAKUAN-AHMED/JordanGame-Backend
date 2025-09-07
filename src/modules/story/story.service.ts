@@ -2,10 +2,16 @@ import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
 import ffmpegPath from "ffmpeg-static";
-import { Story } from "./story.model";
+import { bookmarkModel, Ibookmark, Story } from "./story.model";
 import sharp from "sharp";
 import AppError from "../../errors/AppError";
 import { generate4DigitFromUUID } from "../../utils/utils";
+import { Istory } from "./story.interface";
+import { User } from "../user/user.model";
+import QueryBuilder from "../../builder/QueryBuilder";
+
+
+
 
 const TEMP_DIR = path.join(process.cwd(), "uploads/temp");
 const FINAL_DIR = path.join(process.cwd(), "uploads/stories");
@@ -24,43 +30,43 @@ const safeUnlink = async (filePath: string) => {
 };
 
 export const storyServices = {
-
-  saveTempFile: (file: Express.Multer.File) => {
-    const tempPath = path.join(TEMP_DIR, `${Date.now()}_${file.originalname}`);
-    fs.writeFileSync(tempPath, new Uint8Array(file.buffer));
-    return tempPath;
+  saveTempFile: (files: Express.Multer.File[]) => {
+    return files.map((file, index) => {
+      const tempPath = path.join(TEMP_DIR, `${Date.now()}_${index}_${file.originalname}`);
+      fs.writeFileSync(tempPath, new Uint8Array(file.buffer));
+      return tempPath;
+    });
   },
 
   compressVideo: async (filePath: string) => {
-    const id=await generate4DigitFromUUID();
+    const id = await generate4DigitFromUUID();
     return new Promise<string>((resolve, reject) => {
       const fileName = path.basename(filePath, path.extname(filePath));
-      const outFile = path.join(FINAL_DIR, `${fileName}_compressed.mp4${id}`);
+      const outFile = path.join(FINAL_DIR, `${fileName}_compressed_${id}.mp4`);
       const cmd = `"${ffmpegPath}" -i "${filePath}" -vcodec libx264 -crf 28 "${outFile}" -y`;
 
       exec(cmd, (err) => {
         if (err) return reject(err);
-        safeUnlink(filePath); // delete temp safely
+        safeUnlink(filePath);
         resolve(outFile);
       });
     });
   },
 
   compressAudio: async (filePath: string) => {
-    const id=await generate4DigitFromUUID();
+    const id = await generate4DigitFromUUID();
     return new Promise<string>((resolve, reject) => {
       const fileName = path.basename(filePath, path.extname(filePath));
-      const outFile = path.join(FINAL_DIR, `${fileName}_compressed.mp3${id}`);
+      const outFile = path.join(FINAL_DIR, `${fileName}_compressed_${id}.mp3`);
       const cmd = `"${ffmpegPath}" -i "${filePath}" -b:a 128k "${outFile}" -y`;
 
       exec(cmd, async (err) => {
         if (err) return reject(err);
 
-        // delete temp safely
         safeUnlink(filePath);
 
-        // now generate HLS chunks for audio
         try {
+          //generate hls for audio
           const audioChunkFolder = path.join(CHUNKS_DIR, fileName);
           if (!fs.existsSync(audioChunkFolder)) fs.mkdirSync(audioChunkFolder, { recursive: true });
 
@@ -68,10 +74,7 @@ export const storyServices = {
           exec(hlsCmd, (hlsErr) => {
             if (hlsErr) return reject(hlsErr);
 
-            // delete compressed MP3 after HLS chunks
             safeUnlink(outFile);
-
-            // return the path to index.m3u8
             resolve(path.join(audioChunkFolder, "index.m3u8"));
           });
         } catch (hlsError) {
@@ -81,23 +84,28 @@ export const storyServices = {
     });
   },
 
+  compressImages: async (filePaths: string[]) => {
+    const compressedPaths: string[] = [];
 
-  compressImage: async (filePath: string) => {
-    try {
+    for (const filePath of filePaths) {
+      try {
+        const id = await generate4DigitFromUUID();
+        const fileName = path.basename(filePath, path.extname(filePath));
+        const outFile = path.join(FINAL_DIR, `${fileName}_compressed_${id}.jpg`);
 
-      const id=await generate4DigitFromUUID();
-    
-      const outFile = filePath.replace(/\.(jpg|jpeg|png|webp)/,` _compressed.jpg_${id}`);
-      await sharp(filePath)
-        .resize({ width: 1080 })
-        .jpeg({ quality: 80 })
-        .toFile(outFile);
+        await sharp(filePath)
+          .resize({ width: 1080 })
+          .jpeg({ quality: 80 })
+          .toFile(outFile);
 
-      safeUnlink(filePath); // delete temp safely
-      return outFile;
-    } catch (err) {
-      throw new AppError(400, 'Problem found at compressing image')
+        safeUnlink(filePath);
+        compressedPaths.push(outFile);
+      } catch (err) {
+        throw new AppError(400, `Problem compressing image: ${path.basename(filePath)}`);
+      }
     }
+
+    return compressedPaths;
   },
 
   generateHLS: async (filePath: string) => {
@@ -109,17 +117,179 @@ export const storyServices = {
       const cmd = `"${ffmpegPath}" -i "${filePath}" -hls_time 15 -hls_playlist_type vod "${path.join(chunkFolder, "index.m3u8")}"`;
       exec(cmd, (err) => {
         if (err) return reject(err);
-        safeUnlink(filePath); // delete compressed file safely
+        safeUnlink(filePath);
         resolve(path.join(chunkFolder, "index.m3u8"));
       });
     });
   },
 
-  saveStoryDB: async (userId: string, caption: string, mediaUrl: string, type: "video" | "audio" | "image") => {
-    return Story.create({ userId, caption, mediaUrl, type });
+  saveStoryDB: async (payload: Istory) => {
+    const { userId, caption, mediaUrl, type, tags, description } = payload;
+    if (!userId || !caption || !mediaUrl || !type || !description || !tags) {
+      throw new AppError(404, 'Required field missing ,Please  check again');
+    }
+    return Story.create({ userId, caption, mediaUrl, type, tags, description });
   },
 
-  getStories: async () => {
-    return Story.find().sort({ createdAt: -1 });
+  deleteStroy: async (payload: {
+    userId: string,
+    id: string
+  }) => {
+    const { userId, id } = payload;
+    if (!await User.isExistUserById(userId)) {
+      throw new AppError(404, 'User Not Found')
+    }
+
+    await bookmarkModel.findOneAndDelete({
+      storyId:id
+    })
+    return await Story.findOneAndDelete(
+      { userId, _id: id },
+    )
+  },
+  getMyStories: async (payload: { userId: string; query: Record<string, any> }) => {
+    const { userId, query } = payload;
+
+    const queryWithLimit = { ...query, limit: 1 };
+    // check if user exists
+    const userExists = await User.isExistUserById(userId);
+    if (!userExists) {
+      throw new AppError(404, "User Not Found");
+    }
+
+    const builder = new QueryBuilder(queryWithLimit, Story as any);
+
+    const stories = await builder
+      .filter(["type"])
+      .search(["caption"])
+      .sort()
+      .paginate()
+      .execute();
+
+    const meta = await builder.countTotal();
+
+    return {
+      meta,
+      data: stories,
+    };
+  },
+  updateMyStory: async (payload: {
+    userId: string,
+    id: string,
+    data: Partial<{
+      caption: string,
+      description: string
+    }>
+  }) => {
+    const { userId, id, data } = payload;
+    return await Story.findByIdAndUpdate({
+      _id: id,
+      userId,
+    },
+      data
+      , {
+        new: true,
+        runValidators: true
+      })
+  },
+  getLatestStories: async () => {
+    return Story.find().sort({ createdAt: -1 }).limit(10);
+  },
+  libraryData: async (query: Record<string, any>) => {
+    const types: ("audio" | "video" | "image")[] = ["audio", "video", "image"];
+
+    const data: Record<string, any> = {};
+
+    for (const type of types) {
+      // extract pagination info for this type
+      const { page = 1, limit = 10, ...restQuery } = query[type] || {};
+
+      const typeQuery = { ...restQuery, type, page, limit };
+
+      const builder = new QueryBuilder(typeQuery, Story as any);
+
+      const results = await builder
+        .filter(["type"])
+        .search(["caption"])
+        .sort()
+        .paginate()
+        .execute();
+
+      const meta = await builder.countTotal();
+
+      data[type] = {
+        meta,
+        results,
+      };
+    }
+
+    return { data };
+  },
+
+
+  //bookmark related services
+  bookmarkStory:async(payload:Ibookmark)=>{
+    const {userId,storyId}=payload;
+    if(!userId || !storyId)
+    {
+      throw new AppError(404,'Required field missing')
+    }
+    const isStoryExist=await Story.isStoryExistByUserId(storyId as any,userId as any);
+    if(!isStoryExist)
+    {
+      throw new AppError(404,'For this Id Story Doesnt Exist');
+    }
+
+    const isBookMarkExist=await bookmarkModel.isBookMarkExistUserId(storyId as any,userId as any);
+    if(isBookMarkExist) {
+     throw new AppError(404,'For this UserId and StoryId Already Exist');
+    }
+    return await bookmarkModel.create(payload);
+  },
+  getAllMyBookmark:async(userId:string,query:any)=>{
+    const builder=new QueryBuilder(query,bookmarkModel as any);
+    const bookmarks=await builder
+    .filter(["userId"])
+    .include([
+     { path:'userId'},
+     { path:'storyId'},
+    ])
+    .paginate()
+    .execute();
+
+    const meta=await builder.countTotal();
+
+    return {
+      meta,
+      data:bookmarks
+    }
+  },
+  getSingleMyBookmark:async(payload:{
+    userId:string,bookmarkId:string
+  })=>{
+
+    const {userId,bookmarkId}=payload;
+    return await bookmarkModel.findOne({
+      _id:bookmarkId,
+      userId
+    })
+    .populate('userId')
+    .populate('storyId')
+  },
+  deleteBookmark:async(payload:{
+    userId:string,bookmarkId:string
+  })=>{
+    const {userId,bookmarkId}=payload;
+    const isStoryExist=await Story.findById(bookmarkId);
+    if(!isStoryExist)
+    {
+      throw new AppError(404,'Already Deleted');
+    }
+    return await bookmarkModel.findOneAndDelete({
+      _id:bookmarkId,
+      userId
+    })
   }
+
+
 };

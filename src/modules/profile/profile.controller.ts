@@ -32,11 +32,10 @@ const SetUpProfile = catchAsync(async (req, res) => {
   }
 
   const result = await profileServices.SetUpProfile(req.body);
-  // const result = "hello";
   const isok = result ? true : false;
   sendResponse(res, {
     message: isok ? 'Successfully set up profile ' : "something went wrong",
-    code: isok ? 200 : 400,
+    code: isok ? 200 : 404,
     data: isok ? result : []
   })
 });
@@ -63,11 +62,10 @@ const updateProfile = catchAsync(async (req, res) => {
 const myProfile = catchAsync(async (req, res) => {
 
   const result = await profileServices.myProfile(req.User.userId);
-  const isok = result ? true : false;
   sendResponse(res, {
-    message: isok ? 'Successfully retrieved my profile ' : "something went wrong",
-    code: isok ? 200 : 400,
-    data: isok ? result : []
+    message: 'Successfully retrieved my profile ',
+    code:  200,
+    data:result
   })
 })
 

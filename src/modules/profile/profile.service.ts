@@ -31,6 +31,9 @@ const SetUpProfile = async (payload: TUserProfile) => {
     )
   }
 
+  
+
+
   return profile;
 
 };

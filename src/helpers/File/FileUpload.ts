@@ -28,9 +28,8 @@ export const createStorage = () => {
 
 // Multer upload instance
 export const upload = multer({
-  storage: createStorage(),
-  fileFilter: fileFilter,
   limits: {
-    fileSize: 20 * 1024 * 1024, // 20MB
-  },
+    fileSize: 200 * 1024 * 1024, // Use max size (for videos)
+    files: 10
+  }
 });

@@ -10,12 +10,11 @@ router.post('/create-tag',auth('admin'),TagController.createTagController);
 router.route('/tags/:id')
 .get(auth('common'),TagController.getSingleTagController)
 .put(auth('common'),TagController.updateTagController)
-.delete(auth('common'),TagController.deleteTagController)
+.delete(auth('admin'),TagController.deleteTagController)
 
-router.get('/tags', TagController.getAllTagsController);     
-router.patch('/tags/:id/add', TagController.addTagsController);    // PATCH add tags
-router.patch('/tags/:id/remove', TagController.removeTagsController); // PATCH remove tags 
-router.delete('/tags', TagController.deleteMultipleTagsController); // DELETE multiple
+router.get('/tags', auth('common'),TagController.getAllTagsController);     
+router.patch('/tags/:id/add', auth('common'),TagController.addTagsController);   
+router.delete('/tags',auth('admin'), TagController.deleteMultipleTagsController); 
 
 
 export const TagRoutes=router;

@@ -1,10 +1,17 @@
-import { Types } from "mongoose";
+import { Model, Types } from "mongoose";
 
 export interface Istory {
     userId: Types.ObjectId,
     caption: string,
-    mediaUrl: string,
+    description:string,
+    tags:string[],
+    mediaUrl: string[],
     type: "audio" | "video"|"image",
     createdAt: Date,
     expiresAt: Date
+}
+
+export interface StoryIModel extends Model<Istory>{
+    isStoryExistById:(id:string)=>Promise<Istory>;
+    isStoryExistByUserId:(id:string,userId:string)=>Promise<Istory>;
 }
