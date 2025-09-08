@@ -1,56 +1,59 @@
 
+//MediaConvert only deals with encoding and chunk creation.
+//CloudFront only delivers the resulting HLS stream to users
+
+
+
 import { bookmarkModel, Ibookmark, Story } from "./story.model";
 import AppError from "../../errors/AppError";
 import { User } from "../user/user.model";
 import QueryBuilder from "../../builder/QueryBuilder";
-
+import { v4 as uuidv4 } from 'uuid';
 import { uploadSingleFileToS3 } from "../../helpers/S3Service";
-import { Istory } from "./story.interface";
+import { createMediaConvertJob } from "./stroy.constant";
+import { config } from "../../config";
 
 
 export const storyServices = {
-  saveStoryDB: async (data: Istory, files: Express.Multer.File[]) => {
-    const { type } = data;
+  saveStoryDB: async (data: {
+  userId: string,
+  caption: string,
+  description: string,
+  tags: string[],
+  type: "image" | "video" | "audio",
+  files: Express.Multer.File[],
+  expiresAt: Date
+}) => {
+    const { files, type } = data;
 
-    if (type === "image" && files.length === 0)
-      throw new Error("At least one image is required");
+  if (!files || files.length === 0)
+    throw new Error("No files provided");
 
-    if ((type === "video" || type === "audio") && files.length > 1)
-      throw new Error("Only single video/audio is allowed");
+  if ((type === "video" || type === "audio") && files.length > 1)
+    throw new Error("Only single video/audio is allowed");
 
-    const mediaUrls: string[] = [];
-    for (const file of files) {
+  const mediaUrls: string[] = [];
+
+  for (const file of files) {
+    if (type === "image") {
       const url = await uploadSingleFileToS3(file, `story/${type}`);
       mediaUrls.push(url);
     }
+    // } else {
+    //   // Step1: Upload raw file
+    //   const rawUrl = await uploadSingleFileToS3(file, `story/raw`);
 
-    const story = await Story.create({
-      ...data,
-      status: "pending",
-      mediaUrl: mediaUrls,
-    });
+    //   // Step2: Convert to HLS
+    //   const outputFolder = `story/${type}/${uuidv4()}`;
+    //   await createMediaConvertJob(rawUrl, outputFolder);
 
-    let updatedStory=null;
-    if (Array.isArray(story.mediaUrl) && Number(story.mediaUrl?.length) >= 1) {
-      updatedStory=await Story.findByIdAndUpdate({ _id: story._id }, {
-        status: "post"
-      },
-        {
-          new: true,
-          runValidators: true
-        })
+    //   // Step3: Store manifest URL
+    //   mediaUrls.push(`https://${config.aws.bucketName}.s3.${config.aws.region}.amazonaws.com/${outputFolder}/index.m3u8`);
+    // }
+  }
 
-    }
-    else {
-      updatedStory =await Story.findByIdAndUpdate({ _id: story._id }, {
-        status: "draft"
-      },
-        {
-          new: true,
-          runValidators: true
-        })
-    }
-    return updatedStory;
+  const story = await Story.create({ ...data, mediaUrl: mediaUrls });
+  return story;
   },
   deleteStroy: async (payload: {
     userId: string,
@@ -211,3 +214,55 @@ export const storyServices = {
 
 
 };
+
+
+2️⃣ CloudFront
+
+Where it’s used: As a Content Delivery Network (CDN) in front of your S3 output bucket.
+
+Purpose: Serves HLS chunks and manifest files to users fast and globally.
+
+Benefits:
+
+Low latency: Users around the world can stream chunks quickly.
+
+Reduces load on S3 bucket.
+
+Provides HTTPS URLs for secure streaming.
+
+Supports caching, which improves performance.
+
+✅ Key point:
+
+MediaConvert only deals with encoding and chunk creation.
+
+CloudFront only delivers the resulting HLS stream to users.
+
+If you want, I can update your Node.js story upload service to automatically:
+
+Upload video/audio to S3
+
+Trigger MediaConvert job with your role
+
+Return the CloudFront URL for frontend streaming
+
+
+//CloudFront
+
+1️⃣ Setup CloudFront
+
+Go to AWS CloudFront → Create Distribution → Web.
+
+Origin Domain: Your S3 bucket where MediaConvert outputs the HLS chunks (index.m3u8 + .ts files).
+
+Default Behavior: Leave default.
+
+Cache Policy: Standard or customize for streaming.
+
+Enable HTTPS.
+
+Finish creation. You’ll get a CloudFront domain, e.g.:
+
+
+
+//AWS IAM

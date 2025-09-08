@@ -6,9 +6,10 @@ export interface INotification {
   receiverId?: Types.ObjectId | string;
   title: string;
   message?: string;
+  senderId?: Types.ObjectId | string;
   image?: object;
   linkId?: Types.ObjectId | string;
-  role: 'admin' | 'technician' | 'company';
+  role: 'admin' | 'superadmin' | 'user';
   viewStatus?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

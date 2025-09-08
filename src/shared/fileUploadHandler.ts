@@ -1,13 +1,22 @@
 import multer, { StorageEngine, FileFilterCallback } from 'multer';
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs/promises';
+import { v4 as uuidv4 } from 'uuid';
 import { Request } from 'express';
+import { errorLogger } from './logger';
 
-export default function fileUploadHandler(UPLOADS_FOLDER: string) {
+const fileUploadHandler = (UPLOADS_FOLDER: string) => {
   // Ensure the upload folder exists
-  if (!fs.existsSync(UPLOADS_FOLDER)) {
-    fs.mkdirSync(UPLOADS_FOLDER, { recursive: true });
-  }
+  const ensureFolder = async () => {
+    try {
+      await fs.mkdir(UPLOADS_FOLDER, { recursive: true });
+    } catch (err) {
+      errorLogger.error(`Failed to create upload folder: ${err}`);
+      throw new Error('Unable to create upload folder');
+    }
+  };
+
+  ensureFolder();
 
   // Configure multer storage
   const storage: StorageEngine = multer.diskStorage({
@@ -15,17 +24,9 @@ export default function fileUploadHandler(UPLOADS_FOLDER: string) {
       cb(null, UPLOADS_FOLDER); // Use the provided destination folder
     },
     filename: (req, file, cb) => {
-      const fileExt = path.extname(file.originalname); // Get the file extension
-      const filename =
-        file.originalname
-          .replace(fileExt, '') // Remove extension
-          .toLowerCase()
-          .split(' ')
-          .join('-') +
-        '-' +
-        Date.now(); // Append a timestamp
-
-      cb(null, filename + fileExt); // Set the final filename
+      const fileExt = path.extname(file.originalname).toLowerCase();
+      const filename = `${uuidv4()}${fileExt}`; // Use UUID for unique filename
+      cb(null, filename);
     },
   });
 
@@ -35,23 +36,30 @@ export default function fileUploadHandler(UPLOADS_FOLDER: string) {
     file: Express.Multer.File,
     cb: FileFilterCallback
   ) => {
-    console.log(file.mimetype);
     const allowedTypes = [
       'image/jpg',
       'image/jpeg',
       'image/png',
       'image/gif',
+      'application/pdf',
       'image/webp',
       'image/heic',
       'image/heif',
       'text/csv',
+      'video/mp4',
+      'audio/mpeg',
+      'application/octet-stream',
     ];
 
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true); // Accept file
     } else {
       console.error(`File rejected: ${file.originalname}`);
-      cb(new Error('Only jpg, jpeg, png, gif, and webp formats are allowed!'));
+      cb(
+        new Error(
+          'Only jpg, jpeg, png, gif, webp, heic, heif, csv, mp4, pdf and mpeg formats are allowed!'
+        )
+      );
     }
   };
 
@@ -59,8 +67,9 @@ export default function fileUploadHandler(UPLOADS_FOLDER: string) {
   return multer({
     storage,
     limits: {
-      fileSize: 20 * 1024 * 1024, // 20MB limit
+      fileSize: 500 * 1024 * 1024, // 500 MB limit
     },
     fileFilter,
   });
-}
+};
+export default fileUploadHandler;

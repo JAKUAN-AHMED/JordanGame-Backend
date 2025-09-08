@@ -13,10 +13,11 @@ export const config = {
       process.env.MONGODB_URL || 'mongodb://localhost:27017/mentor-service',
   },
   aws: {
-    do_space_endpoint: process.env.DO_SPACE_ENDPOINT!,
-    do_space_bucket: process.env.DO_SPACE_BUCKET!,
-    do_space_access_key: process.env.DO_SPACE_ACCESS_KEY!,
-    do_space_secret_key: process.env.DO_SPACE_SECRET_KEY!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+    region: process.env.AWS_REGION || 'us-east-1',
+    bucketName: process.env.AWS_S3_BUCKET_NAME || 'your-bucket-name',
+    // mediaConvertRoleArn: 'arn:aws:iam::123456789012:role/MediaConvertRole',
   },
   jwt: {
     accessSecret:
@@ -76,12 +77,12 @@ export const config = {
     baseUrl: `http://localhost:${process.env.PORT}`,
     server_name: process.env.SERVER_NAME
   },
-  provider:{
-    google_client_id:process.env.GOOGLE_CLIENT_ID,
-    google_client_secret:process.env.GOOGLE_CLIENT_SECRET,
-    google_callback_url:process.env.GOOGLE_CALLBACK_URL,
-    facebook_client_id:process.env.FB_APP_ID,
-    facebook_client_secret:process.env.FB_APP_SECRET,
-    facebook_callback_url:process.env.FACEBOOK_CALLBACK_URL,
+  provider: {
+    google_client_id: process.env.GOOGLE_CLIENT_ID,
+    google_client_secret: process.env.GOOGLE_CLIENT_SECRET,
+    google_callback_url: process.env.GOOGLE_CALLBACK_URL,
+    facebook_client_id: process.env.FB_APP_ID,
+    facebook_client_secret: process.env.FB_APP_SECRET,
+    facebook_callback_url: process.env.FACEBOOK_CALLBACK_URL,
   }
 };

@@ -9,8 +9,8 @@ const addNotification = async (
   payload: INotification
 ): Promise<INotification> => {
   // Save the notification to the database
-  const result = await Notification.create(payload);
-  return result;
+  return await Notification.create(payload);
+
 };
 
 const getALLNotification = async (
@@ -46,13 +46,16 @@ const getSingleNotification = async (
   return result;
 };
 
+
 const addCustomNotification = async (
   eventName: string,
   notifications: INotification,
   userId?: string
 ) => {
   const messageEvent = `${eventName}::${userId}`;
-  const result = await addNotification(notifications);
+
+  // Save to DB
+  const result = await Notification.create(notifications);
 
   if (eventName === 'admin-notification' && notifications.role === 'admin') {
     //@ts-ignore
@@ -62,15 +65,18 @@ const addCustomNotification = async (
       data: result,
     });
   } else {
+    // Better: use rooms or private emit
     //@ts-ignore
-    io.emit(messageEvent, {
+    io.to(userId).emit(messageEvent, {
       code: StatusCodes.OK,
       message: 'New notification',
       data: result,
     });
   }
+
   return result;
 };
+
 
 const viewNotification = async (notificationId: string) => {
   const result = await Notification.findByIdAndUpdate(

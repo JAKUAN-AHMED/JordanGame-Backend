@@ -1,4 +1,4 @@
-export type Role = 'paid_user' | 'admin' | 'user';
+export type Role = 'superadmin' | 'admin' | 'user';
 
 export type TUserStatus = 'active' | 'delete' | 'block';
 

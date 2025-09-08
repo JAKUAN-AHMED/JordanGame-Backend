@@ -4,6 +4,7 @@ import catchAsync from '../../shared/catchAsync';
 import pick from '../../shared/pick';
 import sendResponse from '../../shared/sendResponse';
 import { notificationFilters } from './notification.constants';
+import { Role } from '../user/user.constant';
 
 const getALLNotification = catchAsync(async (req, res) => {
   const filters = pick(req.query, notificationFilters);
@@ -75,6 +76,23 @@ const clearAllNotification = catchAsync(async (req, res) => {
   });
 });
 
+const addCsNotification = catchAsync(async (req, res) => {
+  const eventName = "admin-notification";
+  const userId = req.User.userId as string; 
+  const notification = {
+    receiverId: req.body.receiverId,
+    title: req.body.title,
+    senderId: req.body.senderId,
+    role: "admin" as Role
+  };
+  sendResponse(res, {
+    message: 'new notificaiton arrived ',
+    code: 200,
+    data: await NotificationService.addCustomNotification(eventName, notification, userId)
+  });
+});
+
+
 export const NotificationController = {
   getALLNotification,
   getAdminNotifications,
@@ -82,4 +100,5 @@ export const NotificationController = {
   viewNotification,
   deleteNotification,
   clearAllNotification,
+  addCsNotification
 };

@@ -32,12 +32,18 @@ bookmarkSchema.statics.isBookMarkExistUserId = async function (storyId: string,u
 export const bookmarkModel = model<Ibookmark,BookMarkModel>('BookMark', bookmarkSchema);
 
 
+//story
+
+
 const storySchema = new Schema<Istory, StoryIModel>({
   userId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   caption: { type: String, required: [true, 'caption required'] },
   tags: {
     type: [String],
     required: [true, 'tags is required']
+  },
+  status:{
+    type:String,enum:['pending','draft','post'],default:"pending"
   },
   description: {
     type: String,

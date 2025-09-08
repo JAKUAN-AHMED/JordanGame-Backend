@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { INotification, INotificationModal } from './notification.interface';
-import { roles } from '../../middlewares/roles';
 import paginate from '../../common/plugins/paginate';
+import { Roles } from '../../middlewares/roles';
 
 const notificationModel = new Schema<INotification>(
   {
@@ -11,7 +11,6 @@ const notificationModel = new Schema<INotification>(
     },
     message: {
       type: String,
-      required: [true, 'Message is required'],
     },
     receiverId: {
       type: Schema.Types.ObjectId,
@@ -20,7 +19,7 @@ const notificationModel = new Schema<INotification>(
     },
     role: {
       type: String,
-      enum: roles,
+      enum: Roles,
       required: true,
     },
     image: {
@@ -28,6 +27,9 @@ const notificationModel = new Schema<INotification>(
     },
     linkId: {
       type: String,
+    },
+    senderId:{
+      type:Schema.Types.ObjectId,ref:"User"
     },
     viewStatus: { type: Boolean, default: false },
   },
