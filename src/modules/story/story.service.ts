@@ -21,17 +21,16 @@ export const storyServices = {
     const mediaUrls: string[] = [];
     for (const file of files) {
       const url = await uploadSingleFileToS3(file, `story/${type}`);
-      mediaUrls.push(url);
+      mediaUrls.push(url as any);
     }
-
-    const story = await Story.create({
+    const story =await Story.create({
       ...data,
       status: "pending",
       mediaUrl: mediaUrls,
     });
 
     let updatedStory=null;
-    if (Array.isArray(story.mediaUrl) && Number(story.mediaUrl?.length) >= 1) {
+    if (Array.isArray(story?.mediaUrl) && Number(story.mediaUrl?.length) >= 1) {
       updatedStory=await Story.findByIdAndUpdate({ _id: story._id }, {
         status: "post"
       },
