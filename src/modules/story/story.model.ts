@@ -33,8 +33,6 @@ export const bookmarkModel = model<Ibookmark,BookMarkModel>('BookMark', bookmark
 
 
 //story
-
-
 const storySchema = new Schema<Istory, StoryIModel>({
   userId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   caption: { type: String, required: [true, 'caption required'] },
@@ -57,9 +55,6 @@ const storySchema = new Schema<Istory, StoryIModel>({
     default: () => new Date(+new Date() + 24 * 60 * 60 * 1000),
   },
 });
-
-
-
 
 //delete story automatically
 storySchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

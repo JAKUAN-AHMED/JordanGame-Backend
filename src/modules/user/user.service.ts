@@ -16,8 +16,7 @@ const createAdminOrSuperAdmin = async (payload: TUser) => {
   }
   const result = new User({
     ...payload,
-    first_name: 'New',
-    last_name: ` ${payload.role === 'admin' ? 'Admin' : 'Super Admin'}`,
+    fname: 'Jakuan',
     email: payload.email,
     password:await  bcrypt.hash(payload.password as any,10),
     role: payload.role,

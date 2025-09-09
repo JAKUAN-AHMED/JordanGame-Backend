@@ -59,8 +59,7 @@ const validateFile = (file: Express.Multer.File) => {
   // Check file size
   if (file.size > maxSize) {
     throw new Error(
-      `File size exceeds ${
-        maxSize / (1024 * 1024)
+      `File size exceeds ${maxSize / (1024 * 1024)
       }MB limit for ${fileCategory}: ${file.originalname}`
     );
   }
@@ -243,7 +242,7 @@ export const uploadSingleFileToS3 = async (
  */
 export const uploadFilesToS3 = async (
   files: Express.Multer.File[],
-  uploadsFolder: string ,
+  uploadsFolder: string,
 ): Promise<string[]> => {
   if (!files || files.length === 0) {
     throw new Error('No files provided');
@@ -307,8 +306,7 @@ export const uploadFilesToS3 = async (
     });
 
     throw new Error(
-      `Batch upload failed: ${
-        error instanceof Error ? error.message : 'Unknown error'
+      `Batch upload failed: ${error instanceof Error ? error.message : 'Unknown error'
       }`
     );
   } finally {
@@ -343,8 +341,7 @@ export const deleteFileFromS3 = async (fileUrl: string): Promise<void> => {
     });
 
     throw new Error(
-      `Failed to delete file: ${
-        error instanceof Error ? error.message : 'Unknown error'
+      `Failed to delete file: ${error instanceof Error ? error.message : 'Unknown error'
       }`
     );
   }
@@ -376,8 +373,7 @@ export const deleteMultipleFilesFromS3 = async (
     });
 
     throw new Error(
-      `Batch delete failed: ${
-        error instanceof Error ? error.message : 'Unknown error'
+      `Batch delete failed: ${error instanceof Error ? error.message : 'Unknown error'
       }`
     );
   }

@@ -6,12 +6,13 @@ import QueryBuilder from "../../builder/QueryBuilder";
 
 import { uploadSingleFileToS3 } from "../../helpers/S3Service";
 import { Istory } from "./story.interface";
+import { NotificationService } from "../notification/notification.services";
+import { Role } from "../user/user.constant";
 
 
 export const storyServices = {
-  saveStoryDB: async (data: Istory, files: Express.Multer.File[]) => {
+  saveStoryDB: async (data: Istory, files: Express.Multer.File[],receiverId:string) => {
     const { type } = data;
-
     if (type === "image" && files.length === 0)
       throw new Error("At least one image is required");
 
@@ -39,6 +40,16 @@ export const storyServices = {
           runValidators: true
         })
 
+        const user=await User.findById(data.userId);
+        const notification={
+          receiverId,
+          title:`${user?.fname} a Posted Story`,
+          senderId:data.userId,
+          role:'admin' as Role
+        }
+
+        await NotificationService.addCustomNotification('admin-notification',notification,receiverId)
+   
     }
     else {
       updatedStory =await Story.findByIdAndUpdate({ _id: story._id }, {

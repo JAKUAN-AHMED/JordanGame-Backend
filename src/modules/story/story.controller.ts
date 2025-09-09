@@ -9,9 +9,7 @@ const uploadStory = catchAsync(async (req, res) => {
   const userId = req.User.userId;
   const { caption, description, tags, type } = req.body;
 
-  if (!userId || !caption || !description || !tags || !type) {
-    throw new AppError(404, 'Required Field missing!');
-  }
+ 
 
   // Get files correctly from multer fields
   const files: Express.Multer.File[] = [];
@@ -24,6 +22,9 @@ const uploadStory = catchAsync(async (req, res) => {
     if (fileFields['file']) files.push(...fileFields['file']);
   }
 
+   if (!userId || !caption || !description || !tags || !type || !files) {
+    throw new AppError(404, 'Required Field missing!');
+  }
   const storyData = {
     userId,
     caption,
@@ -35,13 +36,12 @@ const uploadStory = catchAsync(async (req, res) => {
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
   };
 
-  const story = await storyServices.saveStoryDB(storyData as any, files);
 
   // ✅ Response
   sendResponse(res, {
     code: 201,
     message: `${type} story uploaded successfully`,
-    data: story,
+    data:await storyServices.saveStoryDB(storyData as any, files,req.body.receiverId),
   });
 });
   
