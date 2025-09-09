@@ -6,6 +6,7 @@ export interface Istory {
     description:string,
     tags:string[],
     mediaUrl: string[],
+    shared:number,
     status:"draft"|"pending"|"post",
     type: "audio" | "video"|"image",
     createdAt: Date,

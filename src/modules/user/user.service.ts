@@ -6,9 +6,25 @@ import { Types } from 'mongoose';
 import { TokenService } from '../token/token.service';
 import { OtpService } from '../otp/otp.service';
 import bcrypt from 'bcrypt';
+import { bookmarkModel, Story } from '../story/story.model';
+interface MonthData {
+  video: number;
+  audio: number;
+  image:number;
+  videoPercent: number;
+  imagepercent:number;
+  audioPercent: number;
+}
+
+interface YearlyData {
+  [month: string]: MonthData; // month name as key
+}
 
 
-
+type MonthType = "video" | "audio"|"image";
+interface ResultType {
+  [year: number]: YearlyData; // year as key
+}
 const createAdminOrSuperAdmin = async (payload: TUser) => {
   const existingUser = await User.findOne({ email: payload.email });
   if (existingUser) {
@@ -18,7 +34,7 @@ const createAdminOrSuperAdmin = async (payload: TUser) => {
     ...payload,
     fname: 'Jakuan',
     email: payload.email,
-    password:await  bcrypt.hash(payload.password as any,10),
+    password: await bcrypt.hash(payload.password as any, 10),
     role: payload.role,
   });
 
@@ -53,9 +69,6 @@ const getSingleUser = async (userId: string): Promise<TUser | null> => {
   return result[0];
 };
 
-
-
-
 const getAllUsers = async (query: any) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
@@ -73,8 +86,8 @@ const getAllUsers = async (query: any) => {
     { $unwind: { path: '$profile', preserveNullAndEmptyArrays: true } },
     {
       $addFields: {
-        profileId: '$profile._id',   // keep profile _id separately
-        user: '$_id',                // keep original user _id
+        profileId: '$profile._id', // keep profile _id separately
+        user: '$_id', // keep original user _id
       },
     },
     {
@@ -102,11 +115,78 @@ const getAllUsers = async (query: any) => {
   };
 };
 
+//overview api
+const overview = async (yearToFetch:number )=> {
+  const totaluser = await User.countDocuments();
+  const totalBookmark = await bookmarkModel.countDocuments();
 
+  const totalSharedStories = await Story.countDocuments({ shared: true });
+
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const data = await Story.aggregate([
+    {
+      $match: {
+        status: "post",
+        type: { $in: ["video", "audio","image"] },
+        createdAt: {
+          $gte: new Date(`${yearToFetch}-01-01`),
+          $lt: new Date(`${yearToFetch + 1}-01-01`)
+        }
+      }
+    },
+    {
+      $project: {
+        type: 1,
+        month: { $month: "$createdAt" }
+      }
+    },
+    {
+      $group: {
+        _id: { month: "$month", type: "$type" },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  // Initialize months with names
+  const result: ResultType = {};
+  result[yearToFetch] = {};
+  monthNames.forEach(name => {
+    result[yearToFetch][name] = { video: 0, audio: 0,image:0, videoPercent: 0,imagepercent:0, audioPercent: 0 };
+  });
+
+  // Fill counts
+  data.forEach(item => {
+    const monthIndex = item._id.month - 1;
+    const monthName = monthNames[monthIndex];
+    const type = item._id.type as MonthType; 
+  result[yearToFetch][monthName][type] = item.count;
+  });
+
+  // Calculate percentages
+  monthNames.forEach(name => {
+    const monthData = result[yearToFetch][name];
+    const total = monthData.video + monthData.audio;
+    if (total > 0) {
+      monthData.videoPercent = (monthData.video / total) * 100;
+      monthData.audioPercent = (monthData.audio / total) * 100;
+      monthData.imagepercent = (monthData.image / total) * 100;
+    }
+  });
+
+  return {
+    totalBookmark,
+    totalSharedStories,
+    totaluser,
+    data: result
+  };
+};
 
 
 export const UserService = {
   createAdminOrSuperAdmin,
   getAllUsers,
   getSingleUser,
+  overview
 };

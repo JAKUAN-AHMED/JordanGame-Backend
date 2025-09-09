@@ -60,7 +60,7 @@ const getMyStories = catchAsync(async (req, res) => {
 })
 
 const getLatestStories = catchAsync(async (req, res) => {
-  sendResponse(res, { code: 200, message: "Latest Stories fetched", data: await storyServices.getLatestStories() });
+  sendResponse(res, { code: 200, message: "Latest Stories fetched", data: await storyServices.getLatestStories(req.query) });
 });
 
 const deleteMyStory = catchAsync(async (req, res) => {
@@ -128,6 +128,17 @@ const getAllMyBookmark = catchAsync(async (req, res) => {
     data: await storyServices.getAllMyBookmark(req.body.userId, req.query)
   })
 })
+
+
+//shared track
+
+const sharedStory=catchAsync(async(req ,res)=>{
+   sendResponse(res, {
+      message:'Successfully Retrieved  Updated Shared Story',
+      code: 200,
+      data: await storyServices.StoryShared(req.params.id as string)
+    })
+})
 export const storyController = {
   uploadStory,
   getLatestStories,
@@ -136,6 +147,7 @@ export const storyController = {
   updateMyStory,
   librayAudioData,
   createBookmark,
+  sharedStory,
   getAllMyBookmark,
   getSingleMyBookmark,
   deleteBookmark

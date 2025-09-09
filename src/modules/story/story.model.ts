@@ -43,6 +43,9 @@ const storySchema = new Schema<Istory, StoryIModel>({
   status:{
     type:String,enum:['pending','draft','post'],default:"pending"
   },
+  shared:{
+    type:Number,default:0
+  },
   description: {
     type: String,
     required: [true, 'description is required']

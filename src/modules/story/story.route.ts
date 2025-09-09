@@ -18,6 +18,7 @@ const uploadMiddleware = upload.fields([
 router.route('/story')
     .post(auth('common'), uploadMiddleware,storyController.uploadStory)
     .get(auth('common'), storyController.getLatestStories)
+    
 
 
 router.route('/stories')
@@ -41,4 +42,6 @@ router.route('/bookmark')
 
 router.get('/all-bookmark', auth('common'), storyController.getAllMyBookmark)
 
+router.patch('/update/:id',auth('common'),storyController.sharedStory);
+//shared story
 export const StoryRoutes = router;

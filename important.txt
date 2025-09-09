@@ -266,3 +266,6 @@ Finish creation. You’ll get a CloudFront domain, e.g.:
 
 
 //AWS IAM
+
+
+//story viewer restriction not implemented

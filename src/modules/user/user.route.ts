@@ -43,4 +43,6 @@ router.post(
 );
 
 
+router.get('/overview',auth('admin'),UserController.overview);
+
 export const UserRoutes = router;

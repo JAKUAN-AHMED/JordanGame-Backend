@@ -28,7 +28,7 @@ const getAllUsers = catchAsync(async (req, res) => {
 
 //get single user from database
 const getSingleUser = catchAsync(async (req, res) => {
-  const {userId} =req.User;
+  const { userId } = req.User;
   const result = await UserService.getSingleUser(userId);
   sendResponse(res, {
     code: StatusCodes.OK,
@@ -39,13 +39,16 @@ const getSingleUser = catchAsync(async (req, res) => {
 
 //update user status from database
 
-
-
-
+const overview = catchAsync(async (req, res) => {
+  sendResponse(res, {
+    message: 'SuccessfullyRetreived Data ',
+    code: 200,
+    data: await UserService.overview(req.body.year as number),
+  });
+});
 export const UserController = {
   createAdminOrSuperAdmin,
   getAllUsers,
   getSingleUser,
-
-
+  overview
 };
