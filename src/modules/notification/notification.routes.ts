@@ -20,4 +20,7 @@ router
   .patch(auth('common'), NotificationController.viewNotification)
   .delete(auth('common'), NotificationController.deleteNotification);
 
+
+  router.route('/notification')
+  .post(auth('common'),NotificationController.addCsNotification)
 export const NotificationRoutes = router;

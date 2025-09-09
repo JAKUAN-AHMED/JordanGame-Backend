@@ -7,12 +7,13 @@ import { TokenService } from '../token/token.service';
 import { OtpService } from '../otp/otp.service';
 import bcrypt from 'bcrypt';
 import { bookmarkModel, Story } from '../story/story.model';
+import { Notification } from '../notification/notification.model';
 interface MonthData {
   video: number;
   audio: number;
-  image:number;
+  image: number;
   videoPercent: number;
-  imagepercent:number;
+  imagepercent: number;
   audioPercent: number;
 }
 
@@ -20,8 +21,7 @@ interface YearlyData {
   [month: string]: MonthData; // month name as key
 }
 
-
-type MonthType = "video" | "audio"|"image";
+type MonthType = 'video' | 'audio' | 'image';
 interface ResultType {
   [year: number]: YearlyData; // year as key
 }
@@ -116,52 +116,74 @@ const getAllUsers = async (query: any) => {
 };
 
 //overview api
-const overview = async (yearToFetch:number )=> {
+const overview = async (yearToFetch: number) => {
   const totaluser = await User.countDocuments();
   const totalBookmark = await bookmarkModel.countDocuments();
-
   const totalSharedStories = await Story.countDocuments({ shared: true });
+  const recentActivity = await Notification.find()
+  .select({ title: 1, createdAt: 1, _id: 0 })
+  .sort({ createdAt: -1 }).limit(10);
 
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
 
   const data = await Story.aggregate([
     {
       $match: {
-        status: "post",
-        type: { $in: ["video", "audio","image"] },
+        status: 'post',
+        type: { $in: ['video', 'audio', 'image'] },
         createdAt: {
           $gte: new Date(`${yearToFetch}-01-01`),
-          $lt: new Date(`${yearToFetch + 1}-01-01`)
-        }
-      }
+          $lt: new Date(`${yearToFetch + 1}-01-01`),
+        },
+      },
     },
     {
       $project: {
         type: 1,
-        month: { $month: "$createdAt" }
-      }
+        month: { $month: '$createdAt' },
+      },
     },
     {
       $group: {
-        _id: { month: "$month", type: "$type" },
-        count: { $sum: 1 }
-      }
-    }
+        _id: { month: '$month', type: '$type' },
+        count: { $sum: 1 },
+      },
+    },
   ]);
 
   // Initialize months with names
   const result: ResultType = {};
   result[yearToFetch] = {};
   monthNames.forEach(name => {
-    result[yearToFetch][name] = { video: 0, audio: 0,image:0, videoPercent: 0,imagepercent:0, audioPercent: 0 };
+    result[yearToFetch][name] = {
+      video: 0,
+      audio: 0,
+      image: 0,
+      videoPercent: 0,
+      imagepercent: 0,
+      audioPercent: 0,
+    };
   });
 
   // Fill counts
   data.forEach(item => {
     const monthIndex = item._id.month - 1;
     const monthName = monthNames[monthIndex];
-    const type = item._id.type as MonthType; 
-  result[yearToFetch][monthName][type] = item.count;
+    const type = item._id.type as MonthType;
+    result[yearToFetch][monthName][type] = item.count;
   });
 
   // Calculate percentages
@@ -179,14 +201,14 @@ const overview = async (yearToFetch:number )=> {
     totalBookmark,
     totalSharedStories,
     totaluser,
-    data: result
+    data: result,
+    recentActivity
   };
 };
-
 
 export const UserService = {
   createAdminOrSuperAdmin,
   getAllUsers,
   getSingleUser,
-  overview
+  overview,
 };

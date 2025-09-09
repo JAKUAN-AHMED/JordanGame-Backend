@@ -77,13 +77,13 @@ const clearAllNotification = catchAsync(async (req, res) => {
 });
 
 const addCsNotification = catchAsync(async (req, res) => {
-  const eventName = "admin-notification";
+  const eventName = req.body.eventName;
   const userId = req.User.userId as string; 
   const notification = {
     receiverId: req.body.receiverId,
     title: req.body.title,
     senderId: req.body.senderId,
-    role: "admin" as Role
+    role: req.body.role as Role
   };
   sendResponse(res, {
     message: 'new notificaiton arrived ',

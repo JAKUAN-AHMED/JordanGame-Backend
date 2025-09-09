@@ -3,8 +3,8 @@ import { Model, model, Schema, Types } from "mongoose";
 import { Istory, StoryIModel } from "./story.interface";
 
 export interface Ibookmark {
-  userId: Types.ObjectId,
-  storyId: Types.ObjectId,
+  user: Types.ObjectId,
+  story: Types.ObjectId,
   createdAt: Date
 }
 
@@ -15,18 +15,18 @@ interface BookMarkModel extends Model<Ibookmark>{
   isBookMarkExistId:(id:string)=>Promise<Ibookmark>;
 }
 const bookmarkSchema = new Schema<Ibookmark,BookMarkModel>({
-  userId: { type: Schema.Types.ObjectId, ref: "User", required: [true, 'userId required'] },
-  storyId: { type: Schema.Types.ObjectId, ref: "Story", required: [true, 'storyid is required too'] },
+  user: { type: Schema.Types.ObjectId, ref: "User", required: [true, 'userId required'] },
+  story: { type: Schema.Types.ObjectId, ref: "Story", required: [true, 'storyid is required too'] },
   createdAt: { type: Date, default: Date.now() }
 });
 //is bookmark exist
 bookmarkSchema.statics.isBookMarkExistId = async function (id: string) {
   return await this.findById(id);
 }
-bookmarkSchema.statics.isBookMarkExistUserId = async function (storyId: string,userId:string) {
+bookmarkSchema.statics.isBookMarkExistUserId = async function (story: string,user:string) {
   return await this.findOne({
-    storyId,
-    userId
+    story,
+    user
   });
 }
 export const bookmarkModel = model<Ibookmark,BookMarkModel>('BookMark', bookmarkSchema);
@@ -34,7 +34,7 @@ export const bookmarkModel = model<Ibookmark,BookMarkModel>('BookMark', bookmark
 
 //story
 const storySchema = new Schema<Istory, StoryIModel>({
-  userId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+  user: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
   caption: { type: String, required: [true, 'caption required'] },
   tags: {
     type: [String],
@@ -68,10 +68,10 @@ storySchema.statics.isStoryExistById = async function (id: string) {
 }
 
 //is story exist by userId
-storySchema.statics.isStoryExistByUserId = async function (id: string,userId:string) {
+storySchema.statics.isStoryExistByUserId = async function (id: string,user:string) {
   return await this.findOne({
     _id:id,
-    userId
+    user
   });
 }
 

@@ -45,11 +45,11 @@ export const storyServices = {
         }
       );
 
-      const user = await User.findById(data.userId);
+      const user = await User.findById(data.user);
       const notification = {
         receiverId,
-        title: `${user?.fname} a Posted Story`,
-        senderId: data.userId,
+        title: `${user?.fname} Posted ${story.type} Story`,
+        senderId: data.user,
         role: 'admin' as Role,
       };
 
@@ -72,16 +72,16 @@ export const storyServices = {
     }
     return updatedStory;
   },
-  deleteStroy: async (payload: { userId: string; id: string }) => {
-    const { userId, id } = payload;
-    if (!(await User.isExistUserById(userId))) {
+  deleteStroy: async (payload: { user: string; id: string }) => {
+    const { user, id } = payload;
+    if (!(await User.isExistUserById(user))) {
       throw new AppError(404, 'User Not Found');
     }
 
     await bookmarkModel.findOneAndDelete({
-      storyId: id,
+      story: id,
     });
-    return await Story.findOneAndDelete({ userId, _id: id });
+    return await Story.findOneAndDelete({ user, _id: id });
   },
   getMyStories: async (payload: {
     userId: string;
@@ -135,12 +135,24 @@ export const storyServices = {
   },
   getLatestStories: async (query: Record<string, any>) => {
     const builder = new QueryBuilder(query, Story as any);
-    const story = await builder.filter(['status', 'type']).sort().execute();
+    const story = await builder
+      .filter(['status', 'type'])
+      .include([
+        {
+          path: 'user',
+          select: 'fname',
+        },
+      ])
+      .sort()
+      .execute();
 
     const meta = await builder.countTotal();
+
+
+   
     return {
       meta,
-      data: story,
+      data:story,
     };
   },
   libraryData: async (query: Record<string, any>) => {
@@ -175,35 +187,38 @@ export const storyServices = {
   },
 
   //track user share
-  StoryShared:async (id:string) => {
-
-    if(!await Story.findById(id)){
-      throw new AppError(404,"Story Doesn't Exist")
+  StoryShared: async (id: string) => {
+    if (!(await Story.findById(id))) {
+      throw new AppError(404, "Story Doesn't Exist");
     }
-    return await Story.findByIdAndUpdate(id,{
-      $inc:{shared:1}
-    },{
-      new:true,
-      runValidators:true
-    })
+    return await Story.findByIdAndUpdate(
+      id,
+      {
+        $inc: { shared: 1 },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
   },
   //bookmark related services
   bookmarkStory: async (payload: Ibookmark) => {
-    const { userId, storyId } = payload;
-    if (!userId || !storyId) {
+    const { story, user } = payload;
+    if (!user || !story) {
       throw new AppError(404, 'Required field missing');
     }
     const isStoryExist = await Story.isStoryExistByUserId(
-      storyId as any,
-      userId as any
+      story as any,
+      user as any
     );
     if (!isStoryExist) {
       throw new AppError(404, 'For this Id Story Doesnt Exist');
     }
 
     const isBookMarkExist = await bookmarkModel.isBookMarkExistUserId(
-      storyId as any,
-      userId as any
+      story as any,
+      user as any
     );
     if (isBookMarkExist) {
       throw new AppError(404, 'For this UserId and StoryId Already Exist');
@@ -213,8 +228,8 @@ export const storyServices = {
   getAllMyBookmark: async (userId: string, query: any) => {
     const builder = new QueryBuilder(query, bookmarkModel as any);
     const bookmarks = await builder
-      .filter(['userId'])
-      .include([{ path: 'userId' }, { path: 'storyId' }])
+      .filter(['user'])
+      .include([{ path: 'user' }, { path: 'story' }])
       .paginate()
       .execute();
 
@@ -235,8 +250,8 @@ export const storyServices = {
         _id: bookmarkId,
         userId,
       })
-      .populate('userId')
-      .populate('storyId');
+      .populate('user')
+      .populate('story');
   },
   deleteBookmark: async (payload: { userId: string; bookmarkId: string }) => {
     const { userId, bookmarkId } = payload;

@@ -9,24 +9,27 @@ const uploadStory = catchAsync(async (req, res) => {
   const userId = req.User.userId;
   const { caption, description, tags, type } = req.body;
 
- 
-
-  // Get files correctly from multer fields
+  // Get files from multer
   const files: Express.Multer.File[] = [];
-
   if (req.files) {
     const fileFields = req.files as { [fieldname: string]: Express.Multer.File[] };
-    // images
-    if (fileFields['files']) files.push(...fileFields['files']);
-    // video/audio
-    if (fileFields['file']) files.push(...fileFields['file']);
+
+    if (fileFields['files']) files.push(...fileFields['files']); // images
+    if (fileFields['file']) files.push(...fileFields['file']);   // video/audio
   }
 
-   if (!userId || !caption || !description || !tags || !type || !files) {
-    throw new AppError(404, 'Required Field missing!');
+  // ❌ Throw error if no file uploaded
+  if (!files || files.length === 0) {
+    throw new AppError(400, 'File is required!');
   }
+
+  // ❌ Throw error if other required fields missing
+  if (!userId || !caption || !description || !tags || !type) {
+    throw new AppError(400, 'Required field missing!');
+  }
+
   const storyData = {
-    userId,
+    user: userId,
     caption,
     description,
     tags: Array.isArray(tags) ? tags : [tags],
@@ -36,12 +39,15 @@ const uploadStory = catchAsync(async (req, res) => {
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
   };
 
-
   // ✅ Response
   sendResponse(res, {
     code: 201,
     message: `${type} story uploaded successfully`,
-    data:await storyServices.saveStoryDB(storyData as any, files,req.body.receiverId),
+    data: await storyServices.saveStoryDB(
+      storyData as any,
+      files,
+      req.body.receiverId
+    ),
   });
 });
   
@@ -69,7 +75,7 @@ const deleteMyStory = catchAsync(async (req, res) => {
   sendResponse(res, {
     message: 'Successfully Deleted a Story ',
     code: 200,
-    data: await storyServices.deleteStroy({ userId, id })
+    data: await storyServices.deleteStroy({ user:userId, id })
   })
 
 })
@@ -96,7 +102,7 @@ const librayAudioData = catchAsync(async (req, res) => {
 
 const createBookmark = catchAsync(async (req, res) => {
 
-  req.body.userId = req.User.userId as string;
+  req.body.user = req.User.userId as string;
   sendResponse(res, {
     message: 'Successfully Story Added as BookMark',
     code: 201,
