@@ -21,7 +21,7 @@ router
 router.post(
   '/profile/create',
   auth('common'),
-  upload.single("avatar"),
+  upload.single("file"),
   SetUpProfileController.SetUpProfile
 );
 
@@ -30,7 +30,7 @@ router.post(
 router.route('/profile')
   .get(auth('common'), SetUpProfileController.myProfile)
   .patch(auth('common'),
-    upload.single('avatar'),
+    upload.single('file'),
     SetUpProfileController.updateProfile
   )
   .delete(auth('common'),SetUpProfileController.deleteProfile)

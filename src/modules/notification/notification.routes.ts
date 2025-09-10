@@ -21,6 +21,8 @@ router
   .delete(auth('common'), NotificationController.deleteNotification);
 
 
-  router.route('/notification')
+  router.route('/notify')
   .post(auth('common'),NotificationController.addCsNotification)
+
+  router.post('/send-all',auth('common'),NotificationController.addNotification); 
 export const NotificationRoutes = router;

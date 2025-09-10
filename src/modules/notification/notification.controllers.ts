@@ -78,21 +78,32 @@ const clearAllNotification = catchAsync(async (req, res) => {
 
 const addCsNotification = catchAsync(async (req, res) => {
   const eventName = req.body.eventName;
-  const userId = req.User.userId as string; 
+  const userId = req.User.userId as string;
   const notification = {
     receiverId: req.body.receiverId,
     title: req.body.title,
-    senderId: req.body.senderId,
-    role: req.body.role as Role
+    senderId: userId,
+    role: req.body.role as Role,
   };
   sendResponse(res, {
     message: 'new notificaiton arrived ',
     code: 200,
-    data: await NotificationService.addCustomNotification(eventName, notification, userId)
+    data: await NotificationService.addCustomNotification(
+      eventName,
+      notification,
+      userId
+    ),
   });
 });
 
-
+const addNotification = catchAsync(async (req, res) => {
+  req.body.senderId=req.User.userId as string;
+  sendResponse(res, {
+    message: 'Successfully send notification ',
+    code: 200,
+    data: await NotificationService.addNotification(req.body),
+  });
+});
 export const NotificationController = {
   getALLNotification,
   getAdminNotifications,
@@ -100,5 +111,6 @@ export const NotificationController = {
   viewNotification,
   deleteNotification,
   clearAllNotification,
-  addCsNotification
+  addCsNotification,
+  addNotification
 };

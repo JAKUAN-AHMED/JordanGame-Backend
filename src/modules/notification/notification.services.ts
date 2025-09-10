@@ -91,6 +91,11 @@ const viewNotification = async (notificationId: string) => {
 };
 
 const deleteNotification = async (notificationId: string) => {
+  const notification=await Notification.findById(notificationId);
+  if(!notification)
+  {
+    throw new AppError(404,'Notification Already Deleted');
+  }
   const result = await Notification.findByIdAndDelete(notificationId);
   if (!result) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Notification not found');

@@ -1,4 +1,5 @@
 import AppError from '../../errors/AppError';
+import { uploadSingleFileToS3 } from '../../helpers/S3Service';
 import catchAsync from '../../shared/catchAsync';
 import sendResponse from '../../shared/sendResponse';
 import { profileServices } from './profile.service';
@@ -23,9 +24,8 @@ const SetUpProfile = catchAsync(async (req, res) => {
   }
   let imageUrl: string = '';
   if (req.file) {
-    imageUrl = `${process.env.BACKEND_LIVE_URL}/uploads/users/${req.file.originalname}`;
-    // const { location } = await uploadToDigitalOceanAWS(file);
-    // imageUrl = location;
+    const type="image";
+     imageUrl = await uploadSingleFileToS3(req.file, `users/${type}`);
   }
   if (imageUrl) {
     req.body.avatar = imageUrl;
@@ -43,11 +43,11 @@ const SetUpProfile = catchAsync(async (req, res) => {
 
 const updateProfile = catchAsync(async (req, res) => {
   let imageUrl = '';
-  if (req.file) {
-    imageUrl = `${process.env.BACKEND_LIVE_URL}/uploads/users/${req.file.originalname}`;
+  const type="image";
+  if (req.file && req.file!=null) {
+    imageUrl = await uploadSingleFileToS3(req.file, `users/${type}`);
     req.body.avatar = imageUrl as string;
   }
-  console.log("profile", req.User.userId);
 
   const result = await profileServices.updateProfile(req.User.userId, req.body);
   const isok = result ? true : false;

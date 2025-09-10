@@ -148,11 +148,9 @@ export const storyServices = {
 
     const meta = await builder.countTotal();
 
-
-   
     return {
       meta,
-      data:story,
+      data: story,
     };
   },
   libraryData: async (query: Record<string, any>) => {
@@ -208,10 +206,10 @@ export const storyServices = {
     if (!user || !story) {
       throw new AppError(404, 'Required field missing');
     }
-    const isStoryExist = await Story.isStoryExistByUserId(
-      story as any,
-      user as any
-    );
+    const isStoryExist = await Story.findOne({
+      _id: story,
+      status: 'post',
+    });
     if (!isStoryExist) {
       throw new AppError(404, 'For this Id Story Doesnt Exist');
     }

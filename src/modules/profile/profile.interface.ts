@@ -16,7 +16,6 @@ export type TUserProfile = {
   nickname?:string;
   dateofBirth:Date;
   avatar?:string;
-
 };
 
 // Profile statics

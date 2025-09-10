@@ -1,5 +1,7 @@
 import { Model, Types } from "mongoose";
 
+
+
 export interface Istory {
     user: Types.ObjectId,
     caption: string,
