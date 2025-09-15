@@ -3,6 +3,7 @@ import { NotFound } from "../../utils/utils";
 import { User } from "../user/user.model";
 import { TUserProfile } from "./profile.interface";
 import { ProfileModel } from "./profile.model";
+import { deleteFileFromS3 } from "../../helpers/S3Service";
 
 
 
@@ -92,6 +93,14 @@ const deleteProfile = async (id: string) => {
     const profile = await ProfileModel.findOne({user: new Types.ObjectId(id)}, null, { session });
     await NotFound(profile, 'Profile Not Exist!');
     
+
+
+    //delete image from profile and aws
+    if(profile?.avatar)
+    {
+      await deleteFileFromS3(profile.avatar as string);
+    }
+
     // Delete profile by its _id
     const deleteProfile = await ProfileModel.findByIdAndDelete(profile?._id, { session });
     

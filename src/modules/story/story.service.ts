@@ -86,7 +86,9 @@ export const storyServices = {
     const storiesMedia=await Story.findById(id);
     if(storiesMedia?.mediaUrl)
     {
-      await deleteFileFromS3(storiesMedia.mediaUrl as any);
+      for(const url of storiesMedia.mediaUrl ){
+        await deleteFileFromS3(url as string);
+      }
     }
     return await Story.findOneAndDelete({ user, _id: id });
   },

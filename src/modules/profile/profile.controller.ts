@@ -44,9 +44,8 @@ const SetUpProfile = catchAsync(async (req, res) => {
 
 const updateProfile = catchAsync(async (req, res) => {
   let imageUrl = '';
-  const type="image";
   if (req.file && req.file!=null) {
-    imageUrl = await uploadSingleFileToS3(req.file, `users/${type}`);
+    imageUrl = await uploadSingleFileToS3(req.file, `${USER_UPLOADS_FOLDER}/image`);
     req.body.avatar = imageUrl as string;
   }
 
