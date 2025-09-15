@@ -2,8 +2,12 @@ import { SetUpProfileController } from './../profile/profile.controller';
 import express from 'express';
 import { UserController } from './user.controller';
 import auth from '../../middlewares/auth';
-import { upload } from '../../helpers/File/FileUpload';
 
+import fileUploadHandler from '../../shared/fileUploadHandler';
+import { USER_UPLOADS_FOLDER } from './user.constant';
+
+
+const upload=fileUploadHandler(USER_UPLOADS_FOLDER);
 
 
 const router = express.Router();

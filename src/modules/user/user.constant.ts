@@ -36,3 +36,6 @@ export const MaritalStatus: IMaritalStatus[] = [
   'prefer not to say',
   'other',
 ];
+
+
+export const USER_UPLOADS_FOLDER = 'demoUpload/p1/users';

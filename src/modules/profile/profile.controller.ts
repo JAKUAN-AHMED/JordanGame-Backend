@@ -2,6 +2,7 @@ import AppError from '../../errors/AppError';
 import { uploadSingleFileToS3 } from '../../helpers/S3Service';
 import catchAsync from '../../shared/catchAsync';
 import sendResponse from '../../shared/sendResponse';
+import { USER_UPLOADS_FOLDER } from '../user/user.constant';
 import { profileServices } from './profile.service';
 
 
@@ -25,7 +26,7 @@ const SetUpProfile = catchAsync(async (req, res) => {
   let imageUrl: string = '';
   if (req.file) {
     const type="image";
-     imageUrl = await uploadSingleFileToS3(req.file, `users/${type}`);
+     imageUrl = await uploadSingleFileToS3(req.file, `${USER_UPLOADS_FOLDER}/profile`);
   }
   if (imageUrl) {
     req.body.avatar = imageUrl;

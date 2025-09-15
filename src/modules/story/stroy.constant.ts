@@ -33,4 +33,4 @@
 //   return response;
 // };
 
-export const STORY_UPLOADS_FOLDER = 'demoUpload/story';
+export const STORY_UPLOADS_FOLDER = 'demoUpload/p1/story';

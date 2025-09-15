@@ -49,6 +49,7 @@ app.use(passport.initialize());
 
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use("/demoUpload", express.static(path.join(process.cwd(), "demoUpload")));
 
 // live response
 app.get('/test', (req: Request, res: Response) => {

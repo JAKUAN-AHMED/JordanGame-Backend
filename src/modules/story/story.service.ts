@@ -3,10 +3,11 @@ import AppError from '../../errors/AppError';
 import { User } from '../user/user.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 
-import { uploadSingleFileToS3 } from '../../helpers/S3Service';
+import { deleteFileFromS3, uploadSingleFileToS3 } from '../../helpers/S3Service';
 import { Istory } from './story.interface';
 import { NotificationService } from '../notification/notification.services';
 import { Role } from '../user/user.constant';
+import { STORY_UPLOADS_FOLDER } from './stroy.constant';
 
 export const storyServices = {
   saveStoryDB: async (
@@ -23,7 +24,7 @@ export const storyServices = {
 
     const mediaUrls: string[] = [];
     for (const file of files) {
-      const url = await uploadSingleFileToS3(file, `story/${type}`);
+      const url = await uploadSingleFileToS3(file, `${STORY_UPLOADS_FOLDER}/${type}`);
       mediaUrls.push(url as any);
     }
     const story = await Story.create({
@@ -81,6 +82,12 @@ export const storyServices = {
     await bookmarkModel.findOneAndDelete({
       story: id,
     });
+
+    const storiesMedia=await Story.findById(id);
+    if(storiesMedia?.mediaUrl)
+    {
+      await deleteFileFromS3(storiesMedia.mediaUrl as any);
+    }
     return await Story.findOneAndDelete({ user, _id: id });
   },
   getMyStories: async (payload: {
