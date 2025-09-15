@@ -11,7 +11,7 @@ const router = Router();
 const upload = fileUploadHandler(STORY_UPLOADS_FOLDER);
 
 
-const uploadMiddleware = upload.fields([
+const uploadMiddleware =upload.fields([
     { name: 'files', maxCount: 10 },  // images
     { name: 'file', maxCount: 1 }     // video/audio
 ]);
