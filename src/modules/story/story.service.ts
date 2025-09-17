@@ -3,7 +3,10 @@ import AppError from '../../errors/AppError';
 import { User } from '../user/user.model';
 import QueryBuilder from '../../builder/QueryBuilder';
 
-import { deleteFileFromS3, uploadSingleFileToS3 } from '../../helpers/S3Service';
+import {
+  deleteFileFromS3,
+  uploadSingleFileToS3,
+} from '../../helpers/S3Service';
 import { Istory } from './story.interface';
 import { NotificationService } from '../notification/notification.services';
 import { Role } from '../user/user.constant';
@@ -24,7 +27,10 @@ export const storyServices = {
 
     const mediaUrls: string[] = [];
     for (const file of files) {
-      const url = await uploadSingleFileToS3(file, `${STORY_UPLOADS_FOLDER}/${type}`);
+      const url = await uploadSingleFileToS3(
+        file,
+        `${STORY_UPLOADS_FOLDER}/${type}`
+      );
       mediaUrls.push(url as any);
     }
     const story = await Story.create({
@@ -83,10 +89,9 @@ export const storyServices = {
       story: id,
     });
 
-    const storiesMedia=await Story.findById(id);
-    if(storiesMedia?.mediaUrl)
-    {
-      for(const url of storiesMedia.mediaUrl ){
+    const storiesMedia = await Story.findById(id);
+    if (storiesMedia?.mediaUrl) {
+      for (const url of storiesMedia.mediaUrl) {
         await deleteFileFromS3(url as string);
       }
     }
@@ -270,5 +275,31 @@ export const storyServices = {
       _id: bookmarkId,
       userId,
     });
+  },
+
+  //working days stories
+  workingDaysStoreis: async (query: any) => {
+    const limit = query.limit || 10;
+    const page = query.page || 1;
+    const skip = (page - 1) * limit;
+
+    const data = await Story.find({
+      type: 'video',
+    })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Story.countDocuments({
+      type: 'video',
+    });
+
+    return {
+      meta: {
+        total,
+        page,
+        limit,
+      },
+      data,
+    };
   },
 };

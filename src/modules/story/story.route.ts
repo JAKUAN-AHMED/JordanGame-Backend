@@ -39,6 +39,9 @@ router.route('/bookmark')
     .get(auth('common'), storyController.getSingleMyBookmark)
     .delete(auth('common'), storyController.deleteBookmark)
 
+//working days api
+router.get('/working-days',auth('common'),storyController.workingDaysStories);
+
 
 router.get('/all-bookmark', auth('common'), storyController.getAllMyBookmark)
 

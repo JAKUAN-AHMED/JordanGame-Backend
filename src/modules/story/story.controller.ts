@@ -145,6 +145,14 @@ const sharedStory=catchAsync(async(req ,res)=>{
       data: await storyServices.StoryShared(req.params.id as string)
     })
 })
+
+const workingDaysStories=catchAsync(async(req ,res)=>{
+   sendResponse(res, {
+      message:'Successfully Retrieved all working days posts ',
+      code: 200,
+      data: await storyServices.workingDaysStoreis(req.query)
+    })
+})
 export const storyController = {
   uploadStory,
   getLatestStories,
@@ -153,6 +161,7 @@ export const storyController = {
   updateMyStory,
   librayAudioData,
   createBookmark,
+  workingDaysStories,
   sharedStory,
   getAllMyBookmark,
   getSingleMyBookmark,
