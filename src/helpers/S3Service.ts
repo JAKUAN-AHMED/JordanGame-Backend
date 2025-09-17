@@ -82,7 +82,7 @@ export const cleanupLocalFiles = (filePaths: string[]) => {
       }
 
       // Track parent folder for later deletion
-      parentFolders.add(path.dirname(filePath));
+      // parentFolders.add(path.dirname(filePath));
     } catch (err) {
       logger.warn(
         colors.yellow(`⚠️  Failed to delete file ${filePath}: ${err}`)
@@ -91,18 +91,18 @@ export const cleanupLocalFiles = (filePaths: string[]) => {
   });
 
   // Delete parent folders if empty
-  parentFolders.forEach(folder => {
-    try {
-      if (fs.existsSync(folder) && fs.readdirSync(folder).length === 0) {
-        fs.rmdirSync(folder);
-        logger.info(colors.green(`🗑️  Deleted empty folder: ${folder}`));
-      }
-    } catch (err) {
-      logger.warn(
-        colors.yellow(`⚠️  Failed to delete folder ${folder}: ${err}`)
-      );
-    }
-  });
+  // parentFolders.forEach(folder => {
+  //   try {
+  //     if (fs.existsSync(folder) && fs.readdirSync(folder).length === 0) {
+  //       fs.rmdirSync(folder);
+  //       logger.info(colors.green(`🗑️  Deleted empty folder: ${folder}`));
+  //     }
+  //   } catch (err) {
+  //     logger.warn(
+  //       colors.yellow(`⚠️  Failed to delete folder ${folder}: ${err}`)
+  //     );
+  //   }
+  // });
 };
 
 /**

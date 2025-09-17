@@ -45,7 +45,7 @@ const userSchema = new Schema<TUser, UserModal>(
     //social login fields
     provider: { type: String, default: "local" },
     providerId: { type: String },
-    fname: { type: String },
+    fname: { type: String ,required:[true,'this is a required field']},
   },
   { timestamps: true }
 );

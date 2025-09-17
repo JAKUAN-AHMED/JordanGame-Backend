@@ -15,16 +15,28 @@ import validator from 'validator';
 
 const createUser = async (userData: TUser) => {
   const existingUser = await User.findOne({ email: userData.email });
-  if(userData.password !== userData.confirmpassword){
-    throw new AppError(StatusCodes.BAD_REQUEST, 'Password and Confirm Password do not match');
+  
+  if (userData.password !== userData.confirmpassword) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'Password and Confirm Password do not match'
+    );
   }
+
+
+  userData.password = await bcrypt.hash(
+    userData.password as string,
+    10 as number
+  );
+
+  
   if (existingUser) {
     if (existingUser.isEmailVerified) {
       throw new AppError(StatusCodes.BAD_REQUEST, 'Email already taken');
     } else {
       await User.findOneAndUpdate({ email: userData.email }, userData);
 
-      //create verification email token 
+      //create verification email token
       const verificationToken = await TokenService.createVerifyEmailToken(
         existingUser
       );
@@ -45,8 +57,7 @@ const createUser = async (userData: TUser) => {
   // const user=userData;
   // console.log('user rug',user)
 
-  const password=await bcrypt.hash(userData.password as string,10 as number);
-  userData.password=password;
+  console.log('userData', userData);
   const user = await User.create(userData);
   //create verification email token
   const verificationToken = await TokenService.createVerifyEmailToken(user);
@@ -61,7 +72,6 @@ const login = async (email: string, reqpassword: string) => {
     throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials');
   }
 
-
   if (!user.isEmailVerified) {
     throw new AppError(403, 'Please verify email first before login');
   }
@@ -73,7 +83,10 @@ const login = async (email: string, reqpassword: string) => {
     );
   }
 
-  const isPasswordValid = await bcrypt.compare(reqpassword, user?.password as string);
+  const isPasswordValid = await bcrypt.compare(
+    reqpassword,
+    user?.password as string
+  );
   if (!isPasswordValid) {
     user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
     if (user.failedLoginAttempts >= config.auth.maxLoginAttempts) {
@@ -103,6 +116,7 @@ const login = async (email: string, reqpassword: string) => {
 };
 
 const verifyEmail = async (email: string, token: string, otp: string) => {
+  console.log('email - token - otp', email, token, otp);
   const user = await User.findOne({ email });
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
@@ -141,7 +155,7 @@ const forgotPassword = async (email: string) => {
   return { resetPasswordToken };
 };
 
-   const resendOtp = async (email: string) => {
+const resendOtp = async (email: string) => {
   const user = await User.findOne({ email });
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
@@ -190,7 +204,10 @@ const changePassword = async (
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
-  const isPasswordValid = await bcrypt.compare(currentPassword, user?.password as string);
+  const isPasswordValid = await bcrypt.compare(
+    currentPassword,
+    user?.password as string
+  );
 
   if (!isPasswordValid) {
     throw new AppError(StatusCodes.UNAUTHORIZED, 'Password is incorrect');

@@ -27,7 +27,7 @@ export type TUser = {
  //social login fields
   provider?: "google" | "facebook" | "local";
   providerId?: string;
-  fname?: string;
+  fname: string;
 };
 
 
