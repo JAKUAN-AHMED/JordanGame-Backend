@@ -29,6 +29,7 @@ router.post('/resend-otp', AuthController.resendOtp);
 
 router.post(
   '/reset-password',
+  auth('common'),
   validateRequest(AuthValidation.resetPasswordValidationSchema),
   AuthController.resetPassword,
 );

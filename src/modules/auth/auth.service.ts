@@ -136,6 +136,8 @@ const verifyEmail = async (email: string, token: string, otp: string) => {
   );
 
   user.isEmailVerified = true;
+  user.isResetPassword = false;
+
   await user.save();
 
   const tokens = await TokenService.accessAndRefreshToken(user);
@@ -175,23 +177,25 @@ const resendOtp = async (email: string) => {
 
 const resetPassword = async (
   email: string,
-  newPassword: string,
-  otp: string
+  password: string,
+  confirmpassword: string
 ) => {
+
+  if(password!=confirmpassword)
+  {
+    throw new AppError(403,'Password and confirm pass not matched');
+  }
+
+  const pass=await bcrypt.hash(password,10 as number);
   const user = await User.findOne({ email });
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
-  await OtpService.verifyOTP(
-    user.email,
-    otp,
-    user?.isResetPassword ? OtpType.RESET_PASSWORD : OtpType.VERIFY
-  );
-  user.password = newPassword;
+  user.password = pass;
   user.isResetPassword = false;
   await user.save();
-  const { password, ...userWithoutPassword } = user.toObject();
-  return userWithoutPassword;
+
+  return user;
 };
 
 const changePassword = async (
