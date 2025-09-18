@@ -19,7 +19,7 @@ app.use(Morgan.errorHandler);
 
 
 export const corsOptions = {
-  origin: ['http://localhost:5173'],
+  origin: ['http://localhost:5173','http://10.10.7.68:3007'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
