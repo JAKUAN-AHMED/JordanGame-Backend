@@ -9,7 +9,7 @@ router.post('/create-tag',auth('admin'),TagController.createTagController);
 
 router.route('/tags/:id')
 .get(auth('common'),TagController.getSingleTagController)
-.put(auth('common'),TagController.updateTagController)
+.patch(auth('common'),TagController.updateTagController)
 .delete(auth('admin'),TagController.deleteTagController)
 
 router.get('/tags', auth('common'),TagController.getAllTagsController);     

@@ -54,14 +54,12 @@ export const storyServices = {
 
       const user = await User.findById(data.user);
 
-      
       const notification = {
         receiverId,
         title: `${user?.fname} Posted ${story.type} Story`,
         senderId: data.user,
         role: 'admin' as Role,
       };
-
 
       await NotificationService.addCustomNotification(
         'admin-notification',
@@ -280,6 +278,26 @@ export const storyServices = {
     });
   },
 
+  //all stories
+
+  getAllStories: async (query: any) => {
+    const limit = query.limit || 10;
+    const page = query.page || 1;
+    const skip = (page - 1) * limit;
+
+    const data = await Story.find().skip(skip).limit(limit);
+
+    const total = await Story.countDocuments();
+
+    return {
+      meta: {
+        total,
+        page,
+        limit,
+      },
+      data,
+    };
+  },
   //working days stories
   workingDaysStoreis: async (query: any) => {
     const limit = query.limit || 10;

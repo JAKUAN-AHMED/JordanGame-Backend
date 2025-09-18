@@ -28,11 +28,15 @@ const updateTag = async (id: string, payload: Partial<Ist>) => {
     // Build update object
     const updateData: any = {};
     if (name) updateData.name = name;
-    if (tag) updateData.tag = tag; // This replaces entire array
+ 
     
     const updatedData = await tagModel.findByIdAndUpdate(
         id, 
-        updateData, 
+       {
+        $addToSet:{
+            tag:tag
+        }
+       },
         { new: true, runValidators: true }
     );
     

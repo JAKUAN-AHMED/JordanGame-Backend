@@ -159,6 +159,13 @@ const workingDaysStories = catchAsync(async (req, res) => {
     data: await storyServices.workingDaysStoreis(req.query),
   });
 });
+const getAllStories = catchAsync(async (req, res) => {
+  sendResponse(res, {
+    message: 'Successfully Retrieved all stories thats been uploaded ',
+    code: 200,
+    data: await storyServices.getAllStories(req.query),
+  });
+});
 export const storyController = {
   uploadStory,
   getLatestStories,
@@ -168,6 +175,7 @@ export const storyController = {
   librayAudioData,
   createBookmark,
   workingDaysStories,
+  getAllStories,
   sharedStory,
   getAllMyBookmark,
   getSingleMyBookmark,

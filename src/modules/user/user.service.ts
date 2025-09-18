@@ -27,24 +27,35 @@ interface ResultType {
 }
 const createAdminOrSuperAdmin = async (payload: TUser) => {
   const existingUser = await User.findOne({ email: payload.email });
-  if (existingUser) {
-    throw new AppError(StatusCodes.BAD_REQUEST, 'This email already exists');
+ if(!existingUser){
+    throw new AppError(404,'User not Found for this Email')
+ }
+
+ //update the existing admin
+ await User.findOneAndUpdate({
+  role:"admin"
+ },{
+  $set:{
+    role:"user"
   }
-  const result = new User({
-    ...payload,
-    fname: 'Jakuan',
-    email: payload.email,
-    password: await bcrypt.hash(payload.password as any, 10),
-    role: payload.role,
-  });
+ },{
+  new:true,
+  runValidators:true
+ })
 
-  await result.save();
 
-  //create verification email token
-  const verificationToken = await TokenService.createVerifyEmailToken(result);
-  //create verification email otp
-  await OtpService.createVerificationEmailOtp(result?.email);
-  return { verificationToken };
+ //making admin
+ await User.findOneAndUpdate({
+  email:payload.email
+ },{
+  $set:{
+    role:"admin"
+  }
+ },{
+  new:true,
+  runValidators:true
+ })
+ 
 };
 
 const getSingleUser = async (userId: string): Promise<TUser | null> => {

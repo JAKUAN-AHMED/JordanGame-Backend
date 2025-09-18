@@ -4,14 +4,12 @@ import sendResponse from '../../shared/sendResponse';
 import { UserService } from './user.service';
 
 const createAdminOrSuperAdmin = catchAsync(async (req, res) => {
-  const payload = req.body;
-  const result = await UserService.createAdminOrSuperAdmin(payload);
+
+  const result = await UserService.createAdminOrSuperAdmin(req.body.email);
   sendResponse(res, {
     code: StatusCodes.CREATED,
     data: result,
-    message: `${
-      payload.role === 'admin' ? 'Admin' : 'Super Admin'
-    } created successfully`,
+    message: "Admin Created Succesfully"
   });
 });
 

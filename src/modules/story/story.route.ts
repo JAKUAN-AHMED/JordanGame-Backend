@@ -47,4 +47,6 @@ router.get('/all-bookmark', auth('common'), storyController.getAllMyBookmark)
 
 router.patch('/update/:id',auth('common'),storyController.sharedStory);
 //shared story
+
+router.get('/all-stories',auth('admin'),storyController.getAllStories);
 export const StoryRoutes = router;

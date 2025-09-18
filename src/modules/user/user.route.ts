@@ -40,9 +40,9 @@ router.route('/profile')
   .delete(auth('common'),SetUpProfileController.deleteProfile)
 
 //make admin
-router.post(
+router.patch(
   '/admin',
-  auth('user', 'superadmin'),
+  auth('superadmin'),
   UserController.createAdminOrSuperAdmin
 );
 
