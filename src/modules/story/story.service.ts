@@ -53,12 +53,15 @@ export const storyServices = {
       );
 
       const user = await User.findById(data.user);
+
+      
       const notification = {
         receiverId,
         title: `${user?.fname} Posted ${story.type} Story`,
         senderId: data.user,
         role: 'admin' as Role,
       };
+
 
       await NotificationService.addCustomNotification(
         'admin-notification',
