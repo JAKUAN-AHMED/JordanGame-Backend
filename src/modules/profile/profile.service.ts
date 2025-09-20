@@ -23,7 +23,7 @@ const SetUpProfile = async (payload: TUserProfile) => {
     await User.findByIdAndUpdate(payload.user,
       {
         $set: {
-          profileId: profile?.id
+          profile: profile?.id
         }
       }, {
       new: true,
@@ -40,13 +40,22 @@ const SetUpProfile = async (payload: TUserProfile) => {
 };
 
 
-const updateProfile = async (id: string, payload: Partial<TUserProfile>) => {
+const updateProfile = async (id: string, payload: Partial<TUserProfile> & {fname:string}) => {
 
+
+  if(payload.fname){
+
+    await User.findByIdAndUpdate(id,{
+      $set:{
+        fname:payload.fname
+      }
+    })
+  }
   const profile = await ProfileModel.findOne({user:id});
   await NotFound(profile, 'Profile Not Found');
 
 
-  return await ProfileModel.findByIdAndUpdate(profile?.id,
+  const data= await ProfileModel.findByIdAndUpdate(profile?.id,
     {
       $set: payload
     },
@@ -55,33 +64,19 @@ const updateProfile = async (id: string, payload: Partial<TUserProfile>) => {
       runValidators: true
     }
   )
+
+  return {
+    user:data,
+    fname:payload.fname
+  }
 }
 
 
 const myProfile = async (id: string) => {
-  // const profile=await ProfileModel.findOne({user:id});
-  // return profile?.populate('user')
+  const user=await User.findById(id).populate('profile')
+  await NotFound(user,'User Not Found');
 
-  const profile = await ProfileModel.aggregate([
-  { $match: { user: new Types.ObjectId(id) }},
-  {
-    $lookup: {
-      from: 'users',
-      localField: 'user',
-      foreignField: '_id',
-      as: 'userData'
-    }
-  },
-  { $unwind: '$userData' },
-  {
-    $replaceRoot: {
-      newRoot: { $mergeObjects: ['$$ROOT', '$userData'] }
-    }
-  },
-  { $project: { userData: 0, user: 0 ,__v:0}} // remove both old fields
-]);
-
-  return profile[0];
+  return user;
 }
 
 const deleteProfile = async (id: string) => {
@@ -105,7 +100,7 @@ const deleteProfile = async (id: string) => {
     const deleteProfile = await ProfileModel.findByIdAndDelete(profile?._id, { session });
     
     // Remove profile reference and delete user
-    await User.findByIdAndUpdate(profile?.user, { $unset: { profileId: '' } }, { session });
+    await User.findByIdAndUpdate(profile?.user, { $unset: { profile: '' } }, { session });
     await User.findByIdAndDelete(profile?.user, { session });
     
     await session.commitTransaction();

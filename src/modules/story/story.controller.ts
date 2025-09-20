@@ -142,8 +142,18 @@ const getAllMyBookmark = catchAsync(async (req, res) => {
   });
 });
 
-//shared track
 
+//all bookmark for admin
+const getAllBookmark = catchAsync(async (req, res) => {
+  req.body.userId = req.User.userId as string;
+  sendResponse(res, {
+    message: 'Successfully Retrieved all  BookMark',
+    code: 200,
+    data: await storyServices.getAllBookmark(req.query),
+  });
+});
+
+//shared track
 const sharedStory = catchAsync(async (req, res) => {
   sendResponse(res, {
     message: 'Successfully Retrieved  Updated Shared Story',
@@ -180,4 +190,5 @@ export const storyController = {
   getAllMyBookmark,
   getSingleMyBookmark,
   deleteBookmark,
+  getAllBookmark
 };

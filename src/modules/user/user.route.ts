@@ -47,6 +47,6 @@ router.patch(
 );
 
 
-router.get('/overview',auth('admin'),UserController.overview);
+router.get('/overview/:year',auth('admin'),UserController.overview);
 
 export const UserRoutes = router;

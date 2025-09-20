@@ -44,6 +44,7 @@ router.get('/working-days',auth('common'),storyController.workingDaysStories);
 
 
 router.get('/all-bookmark', auth('common'), storyController.getAllMyBookmark)
+router.get('/bookmarks/admin', auth('admin'), storyController.getAllBookmark)
 
 router.patch('/update/:id',auth('common'),storyController.sharedStory);
 //shared story

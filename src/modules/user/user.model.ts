@@ -40,7 +40,7 @@ const userSchema = new Schema<TUser, UserModal>(
     isResetPassword: { type: Boolean, default: false },
     failedLoginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date },
-    profileId: { type: Schema.Types.ObjectId, ref: "Profile" },
+    profile: { type: Schema.Types.ObjectId, ref: "Profile" },
 
     //social login fields
     provider: { type: String, default: "local" },
@@ -55,12 +55,12 @@ const userSchema = new Schema<TUser, UserModal>(
 userSchema.plugin(paginate);
 
 
-userSchema.virtual('profile', {
-  ref: 'Profile',
-  localField: 'profileId',
-  foreignField: '_id',
-  justOne: true,
-});
+// userSchema.virtual('profile', {
+//   ref: 'Profile',
+//   localField: 'profile',
+//   foreignField: '_id',
+//   justOne: true,
+// });
 
 // Static methods
 userSchema.statics.isExistUserById = async function (id: string) {

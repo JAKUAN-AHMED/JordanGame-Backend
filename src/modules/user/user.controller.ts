@@ -41,7 +41,7 @@ const overview = catchAsync(async (req, res) => {
   sendResponse(res, {
     message: 'SuccessfullyRetreived Data ',
     code: 200,
-    data: await UserService.overview(req.body.year as number),
+    data: await UserService.overview(Number(req.params.year)),
   });
 });
 export const UserController = {

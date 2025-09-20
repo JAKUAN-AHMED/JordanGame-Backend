@@ -1,11 +1,7 @@
-import { StatusCodes } from 'http-status-codes';
 import AppError from '../../errors/AppError';
 import { TUser } from './user.interface';
 import { User } from './user.model';
 import { Types } from 'mongoose';
-import { TokenService } from '../token/token.service';
-import { OtpService } from '../otp/otp.service';
-import bcrypt from 'bcrypt';
 import { bookmarkModel, Story } from '../story/story.model';
 import { Notification } from '../notification/notification.model';
 interface MonthData {
@@ -97,7 +93,7 @@ const getAllUsers = async (query: any) => {
     { $unwind: { path: '$profile', preserveNullAndEmptyArrays: true } },
     {
       $addFields: {
-        profileId: '$profile._id', // keep profile _id separately
+        profile: '$profile._id', // keep profile _id separately
         user: '$_id', // keep original user _id
       },
     },

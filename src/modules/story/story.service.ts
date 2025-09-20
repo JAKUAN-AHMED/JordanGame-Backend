@@ -11,6 +11,8 @@ import { Istory } from './story.interface';
 import { NotificationService } from '../notification/notification.services';
 import { Role } from '../user/user.constant';
 import { STORY_UPLOADS_FOLDER } from './stroy.constant';
+import { shsModel } from '../SharedStory/shs.model';
+import { feedbackModel } from '../feedback/feedback.model';
 
 export const storyServices = {
   saveStoryDB: async (
@@ -82,10 +84,45 @@ export const storyServices = {
   },
   deleteStroy: async (payload: { user: string; id: string }) => {
     const { user, id } = payload;
-    if (!(await User.isExistUserById(user))) {
+
+    const userExists = await User.findById(user);
+    if (!userExists) {
       throw new AppError(404, 'User Not Found');
     }
+    if (userExists.role === 'admin') {
+      //delete shared story related to story
+      await shsModel.findOneAndDelete({
+        story: id,
+      });
+      //delete feedback related to story
+      await feedbackModel.findOneAndDelete({
+        story: id,
+      });
 
+      //delete bookmark related to story
+      await bookmarkModel.findOneAndDelete({
+        story: id,
+      });
+
+      const storiesMedia = await Story.findById(id);
+      if (storiesMedia?.mediaUrl) {
+        for (const url of storiesMedia.mediaUrl) {
+          await deleteFileFromS3(url as string);
+        }
+      }
+      return await Story.findByIdAndDelete(id);
+    }
+
+    //delete shared story related to story
+    await shsModel.findOneAndDelete({
+      story: id,
+    });
+    //delete feedback related to story
+    await feedbackModel.findOneAndDelete({
+      story: id,
+    });
+
+    //delete bookmark related to story
     await bookmarkModel.findOneAndDelete({
       story: id,
     });
@@ -238,6 +275,7 @@ export const storyServices = {
     }
     return await bookmarkModel.create(payload);
   },
+
   getAllMyBookmark: async (userId: string, query: any) => {
     const builder = new QueryBuilder(query, bookmarkModel as any);
     const bookmarks = await builder
@@ -253,6 +291,55 @@ export const storyServices = {
       data: bookmarks,
     };
   },
+
+  //all bookmark for admin
+  getAllBookmark: async (query: any) => {
+    const limit = Number(query.limit) || 10;
+    const page = Number(query.page) || 1;
+    const skip = (page - 1) * limit;
+
+    const storyFilter: any = {};
+
+    if (query.type) {
+      storyFilter['story.type'] = query.type;
+    }
+
+    const data = await bookmarkModel
+      .find(storyFilter)
+      .populate({
+        path: 'story',
+        model: Story,
+        select: 'caption type _id',
+      })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+    const filteredData: any = data.filter(item => {
+      let matches = true;
+      if (
+        storyFilter['story.type'] &&
+        typeof item.story === 'object' &&
+        'type' in item.story &&
+        item.story.type !== storyFilter['story.type']
+      ) {
+        matches = false;
+      }
+
+      return matches;
+    });
+
+    const total = await bookmarkModel.countDocuments(storyFilter);
+
+    return {
+      meta: {
+        total,
+        page,
+        limit,
+      },
+      data: filteredData,
+    };
+  },
+
   getSingleMyBookmark: async (payload: {
     userId: string;
     bookmarkId: string;
@@ -279,16 +366,27 @@ export const storyServices = {
   },
 
   //all stories
-
   getAllStories: async (query: any) => {
-    const limit = query.limit || 10;
-    const page = query.page || 1;
+
+    const limit = Number(query.limit) || 10;
+    const page = Number(query.page) || 1;
     const skip = (page - 1) * limit;
 
-    const data = await Story.find().skip(skip).limit(limit);
-
-    const total = await Story.countDocuments();
-
+    const storyFiler: any = {};
+    if (query.type) {
+      storyFiler['type'] = query.type;
+    }
+    if (query.status) {
+      storyFiler['status'] = query.status;
+    }
+    if (query.createdAt) {
+      storyFiler['createdAt'] = { $gte: new Date(query.createdAt) };
+    }
+    const data = await Story.find(storyFiler)
+      .skip(skip)
+      .limit(limit)
+      .select('caption type status createdAt _id');
+    const total = await Story.countDocuments(storyFiler);
     return {
       meta: {
         total,
@@ -300,8 +398,8 @@ export const storyServices = {
   },
   //working days stories
   workingDaysStoreis: async (query: any) => {
-    const limit = query.limit || 10;
-    const page = query.page || 1;
+    const limit = Number(query.limit) || 10;
+    const page = Number(query.page) || 1;
     const skip = (page - 1) * limit;
 
     const data = await Story.find({

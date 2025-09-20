@@ -22,8 +22,7 @@ export type TUser = {
   lockUntil: Date | undefined;
   createdAt: Date;
   updatedAt: Date;
-  profileId?:Types.ObjectId | null;
-
+  profile?:Types.ObjectId | null;
  //social login fields
   provider?: "google" | "facebook" | "local";
   providerId?: string;
