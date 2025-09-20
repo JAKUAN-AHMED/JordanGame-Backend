@@ -236,22 +236,6 @@ export const storyServices = {
     return { data };
   },
 
-  //track user share
-  StoryShared: async (id: string) => {
-    if (!(await Story.findById(id))) {
-      throw new AppError(404, "Story Doesn't Exist");
-    }
-    return await Story.findByIdAndUpdate(
-      id,
-      {
-        $inc: { shared: 1 },
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-  },
   //bookmark related services
   bookmarkStory: async (payload: Ibookmark) => {
     const { story, user } = payload;
@@ -301,44 +285,65 @@ export const storyServices = {
     const storyFilter: any = {};
 
     if (query.type) {
-      storyFilter['story.type'] = query.type;
+        storyFilter['story.type'] = query.type;
     }
 
-    const data = await bookmarkModel
-      .find(storyFilter)
-      .populate({
-        path: 'story',
-        model: Story,
-        select: 'caption type _id',
-      })
-      .skip(skip)
-      .limit(limit)
-      .exec();
-    const filteredData: any = data.filter(item => {
-      let matches = true;
-      if (
-        storyFilter['story.type'] &&
-        typeof item.story === 'object' &&
-        'type' in item.story &&
-        item.story.type !== storyFilter['story.type']
-      ) {
-        matches = false;
-      }
+    // Aggregation pipeline
+    const pipeline = [
+        {
+            $lookup: {
+                from: 'stories', 
+                localField: 'story', 
+                foreignField: '_id', 
+                as: 'story' 
+            }
+        },
+        {
+            $unwind: '$story' 
+        },
 
-      return matches;
-    });
+        
+        {
+            $match: storyFilter 
+        },
+        {
+            $skip: skip
+        },
+        {
+            $limit: limit 
+        },
+        {
+            $facet: {
+                data: [ 
+                    { $skip: skip },
+                    { $limit: limit }
+                ],
+                totalCount: [ 
+                    { $count: 'total' }
+                ]
+            }
+        }
+    ];
 
-    const total = await bookmarkModel.countDocuments(storyFilter);
+
+    // console.log("piepline", pipeline);
+    // Execute the aggregation pipeline
+    const result = await bookmarkModel.aggregate(pipeline);
+
+    // Extract the result
+    const data = result[0]?.data || [];
+    const totalCount = result[0]?.totalCount?.[0]?.total || 0;
 
     return {
-      meta: {
-        total,
-        page,
-        limit,
-      },
-      data: filteredData,
+        meta: {
+            total: totalCount,
+            page,
+            limit,
+        },
+        data,
     };
-  },
+}
+,
 
   getSingleMyBookmark: async (payload: {
     userId: string;

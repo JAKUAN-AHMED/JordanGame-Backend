@@ -153,14 +153,7 @@ const getAllBookmark = catchAsync(async (req, res) => {
   });
 });
 
-//shared track
-const sharedStory = catchAsync(async (req, res) => {
-  sendResponse(res, {
-    message: 'Successfully Retrieved  Updated Shared Story',
-    code: 200,
-    data: await storyServices.StoryShared(req.params.id as string),
-  });
-});
+
 
 const workingDaysStories = catchAsync(async (req, res) => {
   sendResponse(res, {
@@ -186,7 +179,6 @@ export const storyController = {
   createBookmark,
   workingDaysStories,
   getAllStories,
-  sharedStory,
   getAllMyBookmark,
   getSingleMyBookmark,
   deleteBookmark,

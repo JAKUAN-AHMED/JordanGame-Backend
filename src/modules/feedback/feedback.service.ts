@@ -37,48 +37,28 @@ const createFeedback = async (
 
 const AllFeedback = async (query: any) => {
   const limit = Number(query.limit) || 10;
-    const page = Number(query.page) || 1;
-    const skip = (page - 1) * limit;
+  const page = Number(query.page) || 1;
+  const skip = (page - 1) * limit;
 
-    const storyFilter: any = {};
+  const respoData = await feedbackModel.find().populate('story').skip(skip).limit(limit);
+
+  console.log('Response', respoData);
+
+  const filterData = respoData.filter((item: any) => {
     if (query.type) {
-      storyFilter['type'] = query.type;
+      return item.story.type === query.type;
     }
-
-  const data = await feedbackModel
-    .find(storyFilter)
-    .populate({
-      path: 'story',
-      model: Story,
-      select: 'caption type _id',
-    })
-    .skip(skip)
-    .limit(limit)
-    .exec();
-  const filteredData: any = data.filter(item => {
-    let matches = true;
-    if (
-      storyFilter['story.type'] &&
-      typeof item.story === 'object' &&
-      'type' in item.story &&
-      item.story.type !== storyFilter['story.type']
-    ) {
-      matches = false;
-    }
-
-    return matches;
+    return item;
   });
-
-  const total = await feedbackModel.countDocuments(storyFilter);
-
+  const total = filterData.length;
   return {
-    meta: {
-      total,
-      page,
-      limit,
-    },
-    data: filteredData,
+    page,
+    limit,
+    total,
+    totalPage: Math.ceil(total / limit),
+    data: filterData,
   };
+
 };
 
 const SingleFeedbackList = async (feedbackId: string) => {
