@@ -6,7 +6,7 @@ import { User } from '../user/user.model';
 
 const uploadStory = catchAsync(async (req, res) => {
   const userId = req.User.userId;
-  const { caption, description, tags, type } = req.body;
+  const { caption, description, tags } = req.body;
 
   // Get files from multer
   const files: Express.Multer.File[] = [];
@@ -19,16 +19,19 @@ const uploadStory = catchAsync(async (req, res) => {
     if (fileFields['file']) files.push(...fileFields['file']); // video/audio
   }
 
+
+
   // ❌ Throw error if no file uploaded
   if (!files || files.length === 0) {
     throw new AppError(400, 'File is required!');
   }
 
   // ❌ Throw error if other required fields missing
-  if (!userId || !caption || !description || !tags || !type) {
+  if (!userId || !caption || !description || !tags) {
     throw new AppError(400, 'Required field missing!');
   }
 
+  const type=files[0]?.mimetype.split('/')[0];
   const receiver = await User.findOne({ role: 'admin' });
   const storyData = {
     user: userId,
