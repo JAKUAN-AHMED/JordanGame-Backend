@@ -40,7 +40,9 @@ const SetUpProfile = async (payload: TUserProfile) => {
 };
 
 
-const updateProfile = async (id: string, payload: Partial<TUserProfile> & {fname:string}) => {
+const updateProfile = async (id: string, payload: Partial<TUserProfile> & {fname?:string,phone?:string}) => {
+  const profile = await ProfileModel.findOne({user:id});
+  await NotFound(profile, 'Profile Not Found');
 
 
   if(payload.fname){
@@ -51,11 +53,15 @@ const updateProfile = async (id: string, payload: Partial<TUserProfile> & {fname
       }
     })
   }
-  const profile = await ProfileModel.findOne({user:id});
-  await NotFound(profile, 'Profile Not Found');
+  if(payload.phone){
 
-
-  const data= await ProfileModel.findByIdAndUpdate(profile?.id,
+    await User.findByIdAndUpdate(id,{
+      $set:{
+        phone:payload.phone
+      }
+    })
+  }
+  const data=await ProfileModel.findByIdAndUpdate(profile?.id,
     {
       $set: payload
     },
@@ -63,11 +69,10 @@ const updateProfile = async (id: string, payload: Partial<TUserProfile> & {fname
       new: true,
       runValidators: true
     }
-  )
+  ).populate('user');
 
   return {
-    user:data,
-    fname:payload.fname
+    data
   }
 }
 
