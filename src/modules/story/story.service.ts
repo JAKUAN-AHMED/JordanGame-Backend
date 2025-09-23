@@ -13,6 +13,7 @@ import { Role } from '../user/user.constant';
 import { STORY_UPLOADS_FOLDER } from './stroy.constant';
 import { shsModel } from '../SharedStory/shs.model';
 import { feedbackModel } from '../feedback/feedback.model';
+import { getMediaDuration, NotFound } from '../../utils/utils';
 
 export const storyServices = {
   saveStoryDB: async (
@@ -20,67 +21,81 @@ export const storyServices = {
     files: Express.Multer.File[],
     receiverId: string
   ) => {
-    const { type } = data;
-    if (type === 'image' && files.length === 0)
-      throw new Error('At least one image is required');
+     const { type } = data;
 
-    if ((type === 'video' || type === 'audio') && files.length > 1)
-      throw new Error('Only single video/audio is allowed');
-
-    const mediaUrls: string[] = [];
-    for (const file of files) {
-      const url = await uploadSingleFileToS3(
-        file,
-        `${STORY_UPLOADS_FOLDER}/${type}`
-      );
-      mediaUrls.push(url as any);
+  if (type === "audio" || type === "video") {
+    if (files.length > 1) {
+      throw new Error('Only a single video/audio is allowed');
     }
-    const story = await Story.create({
-      ...data,
-      status: 'pending',
-      mediaUrl: mediaUrls,
-    });
-
-    let updatedStory = null;
-    if (Array.isArray(story?.mediaUrl) && Number(story.mediaUrl?.length) >= 1) {
-      updatedStory = await Story.findByIdAndUpdate(
-        { _id: story._id },
-        {
-          status: 'post',
-        },
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
-
-      const user = await User.findById(data.user);
-
-      const notification = {
-        receiverId,
-        title: `${user?.fname} Posted ${story.type} Story`,
-        senderId: data.user,
-        role: 'admin' as Role,
-      };
-
-      await NotificationService.addCustomNotification(
-        'admin-notification',
-        notification,
-        receiverId
-      );
-    } else {
-      updatedStory = await Story.findByIdAndUpdate(
-        { _id: story._id },
-        {
-          status: 'draft',
-        },
-        {
-          new: true,
-          runValidators: true,
-        }
-      );
+    if (!data.thumbnail) {
+      throw new Error('Thumbnail is required');
     }
-    return updatedStory;
+    if (!data.medianame) {
+      throw new Error('Media name is required');
+    }
+
+    // Get the file path of the uploaded file (it could be from temp storage or buffer)
+    const filePath = files[0].path;
+
+    // Extract the duration of the audio/video file
+    const duration:string|any = await getMediaDuration(filePath);
+
+    // Check if the duration is provided, else use the extracted duration
+    if (data && !data.duration) {
+      data.duration = duration;
+    }
+  }
+
+  if (type === 'image' && files.length === 0) {
+    throw new Error('At least one image is required');
+  }
+
+  if ((type === 'video' || type === 'audio') && files.length > 1) {
+    throw new Error('Only single video/audio is allowed');
+  }
+
+  const mediaUrls: string[] = [];
+  for (const file of files) {
+    const url = await uploadSingleFileToS3(file, `${STORY_UPLOADS_FOLDER}/${type}`);
+    mediaUrls.push(url as any);
+  }
+
+  const story = await Story.create({
+    ...data,
+    status: 'pending',
+    mediaUrl: mediaUrls,
+  });
+
+  let updatedStory = null;
+  if (Array.isArray(story?.mediaUrl) && Number(story.mediaUrl?.length) >= 1) {
+    updatedStory = await Story.findByIdAndUpdate(
+      { _id: story._id },
+      { status: 'post' },
+      { new: true, runValidators: true }
+    );
+
+    const user = await User.findById(data.user);
+
+    const notification = {
+      receiverId,
+      title: `${user?.fname} Posted ${story.type} Story`,
+      senderId: data.user,
+      role: 'admin' as Role,
+    };
+
+    await NotificationService.addCustomNotification(
+      'admin-notification',
+      notification,
+      receiverId
+    );
+  } else {
+    updatedStory = await Story.findByIdAndUpdate(
+      { _id: story._id },
+      { status: 'draft' },
+      { new: true, runValidators: true }
+    );
+  }
+  return updatedStory;
   },
   deleteStroy: async (payload: { user: string; id: string }) => {
     const { user, id } = payload;
@@ -205,36 +220,51 @@ export const storyServices = {
       data: story,
     };
   },
-  libraryData: async (query: Record<string, any>) => {
-    const types: ('audio' | 'video' | 'image')[] = ['audio', 'video', 'image'];
+ libraryData: async (query: Record<string, any>, user: string) => {
+  // Find the user data
+  const userData = await User.findById(user);
+  await NotFound(userData, 'User Not Found');
 
-    const data: Record<string, any> = {};
+  const types: ('audio' | 'video' | 'image')[] = ['audio', 'video', 'image'];
+  const data: Record<string, any> = {};
 
-    for (const type of types) {
-      // extract pagination info for this type
-      const { page = 1, limit = 10, ...restQuery } = query[type] || {};
+  for (const type of types) {
+    // Extract pagination info for this type
+    const { page = 1, limit = 10, ...restQuery } = query[type] || {};
 
-      const typeQuery = { ...restQuery, type, page, limit };
+    // Include the user filter in the query for each type (audio/video/image)
+    const typeQuery = { 
+      ...restQuery, 
+      type, 
+      user: user,   // Filter by user ID
+      page, 
+      limit 
+    };
 
-      const builder = new QueryBuilder(typeQuery, Story as any);
+    // Create a query builder with the updated query
+    const builder = new QueryBuilder(typeQuery, Story as any);
 
-      const results = await builder
-        .filter(['type'])
-        .search(['caption'])
-        .sort()
-        .paginate()
-        .execute();
+    // Execute query with filters, search, sorting, pagination
+    const results = await builder
+      .filter(['type', 'user'])  // Include 'user' in the filter fields
+      .search(['caption'])
+      .sort()
+      .paginate()
+      .execute();
 
-      const meta = await builder.countTotal();
+    // Get meta information for pagination
+    const meta = await builder.countTotal();
 
-      data[type] = {
-        meta,
-        results,
-      };
-    }
+    // Store results and meta in the data object
+    data[type] = {
+      meta,
+      results,
+    };
+  }
 
-    return { data };
-  },
+  return { data };
+},
+
 
   //bookmark related services
   bookmarkStory: async (payload: Ibookmark) => {
@@ -426,4 +456,15 @@ export const storyServices = {
       data,
     };
   },
+
+  //view count
+  viewCountForMedia:async(isView:boolean,storyId:string) =>{
+    if(isView){
+      return await Story.findOneAndUpdate(
+        { _id: storyId },
+        { $inc: { viewCount: 1 } },
+        { new: true }
+      );
+    }
+  }
 };

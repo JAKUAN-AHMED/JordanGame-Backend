@@ -2,6 +2,9 @@ import catchAsync from '../../shared/catchAsync';
 import sendResponse from '../../shared/sendResponse';
 import AppError from '../../errors/AppError';
 import { storyServices } from './story.service';
+
+import { uploadSingleFileToS3 } from '../../helpers/S3Service';
+import { STORY_UPLOADS_FOLDER } from './stroy.constant';
 import { User } from '../user/user.model';
 
 const uploadStory = catchAsync(async (req, res) => {
@@ -11,48 +14,69 @@ const uploadStory = catchAsync(async (req, res) => {
   // Get files from multer
   const files: Express.Multer.File[] = [];
   if (req.files) {
-    const fileFields = req.files as {
-      [fieldname: string]: Express.Multer.File[];
-    };
-
-    if (fileFields['files']) files.push(...fileFields['files']); // images
-    if (fileFields['file']) files.push(...fileFields['file']); // video/audio
+    const fileFields = req.files as { [fieldname: string]: Express.Multer.File[] };
+    if (fileFields['files']) files.push(...fileFields['files']); // images (main file)
+    if (fileFields['file']) files.push(...fileFields['file']); // video/audio (main media file)
   }
-
-
 
   // ❌ Throw error if no file uploaded
   if (!files || files.length === 0) {
     throw new AppError(400, 'File is required!');
   }
 
-  // ❌ Throw error if other required fields missing
+  // ❌ Throw error if other required fields are missing
   if (!userId || !caption || !description || !tags) {
     throw new AppError(400, 'Required field missing!');
   }
 
-  const type=files[0]?.mimetype.split('/')[0];
-  const receiver = await User.findOne({ role: 'admin' });
-  const storyData = {
+  // Check media type (audio/video)
+  const type = files[0]?.mimetype.split('/')[0]; // 'audio' or 'video'
+
+  // Initialize story data structure
+  const storyData: any = {
     user: userId,
     caption,
     description,
     tags: Array.isArray(tags) ? tags : [tags],
     type,
+    medianame: files[0]?.originalname,
     mediaUrl: [],
     status: 'draft',
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours expiration
   };
+
+  // Handle mediaType - audio/video
+ if (type === 'audio' || type === 'video') {
+  // Handle thumbnail for both audio and video
+  let thumbnailFile: Express.Multer.File[] | undefined;
+  if (
+    req.files &&
+    typeof req.files === 'object' &&
+    !Array.isArray(req.files) &&
+    'thumbnail' in req.files
+  ) {
+    thumbnailFile = (req.files as { [fieldname: string]: Express.Multer.File[] })['thumbnail'];
+  }
+
+  // If a thumbnail is provided, upload it
+  if (thumbnailFile && thumbnailFile.length > 0) {
+    const thumbnailUrl = await uploadSingleFileToS3(thumbnailFile[0], `${STORY_UPLOADS_FOLDER}/thumbnails`);
+    storyData.thumbnail = thumbnailUrl;
+  } else {
+    storyData.thumbnail ='default-thumbnail.png';
+  }
+}
+
+  
+  const receiver=await User.findOne({username:'admin'});
+  // Save the story to the database
+  const story = await storyServices.saveStoryDB(storyData as any, files, receiver?.id as string);
 
   // ✅ Response
   sendResponse(res, {
     code: 201,
     message: `${type} story uploaded successfully`,
-    data: await storyServices.saveStoryDB(
-      storyData as any,
-      files,
-     receiver?.id as string
-    ),
+    data: story,
   });
 });
 
@@ -100,7 +124,7 @@ const librayAudioData = catchAsync(async (req, res) => {
   sendResponse(res, {
     message: 'Successfully retrived libray data ',
     code: 200,
-    data: await storyServices.libraryData(req.query),
+    data: await storyServices.libraryData(req.query,req.User.userId as string),
   });
 });
 
@@ -172,6 +196,17 @@ const getAllStories = catchAsync(async (req, res) => {
     data: await storyServices.getAllStories(req.query),
   });
 });
+
+
+//update view count
+
+const viewCountForMedia = catchAsync(async (req, res) => {
+  sendResponse(res, {
+    message: 'Successfully Updated view count ',
+    code: 200,
+    data: await storyServices.viewCountForMedia(req.body.isView,req.params.id),
+  });
+})
 export const storyController = {
   uploadStory,
   getLatestStories,
@@ -184,6 +219,7 @@ export const storyController = {
   getAllStories,
   getAllMyBookmark,
   getSingleMyBookmark,
+  viewCountForMedia,
   deleteBookmark,
   getAllBookmark
 };

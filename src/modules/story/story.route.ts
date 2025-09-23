@@ -13,7 +13,8 @@ const upload = fileUploadHandler(STORY_UPLOADS_FOLDER);
 
 const uploadMiddleware =upload.fields([
     { name: 'files', maxCount: 10 },  // images
-    { name: 'file', maxCount: 1 }     // video/audio
+    { name: 'file', maxCount: 1 },// video/audio
+    { name: 'thumbnail', maxCount: 1 } //thumbnail
 ]);
 router.route('/story')
     .post(auth('common'), uploadMiddleware,storyController.uploadStory)
@@ -31,6 +32,8 @@ router.route('/story/:id')
     .delete(auth('common'), storyController.deleteMyStory)
     .patch(auth('common'), storyController.updateMyStory)
 
+//VIEW COUNT
+router.patch('/story/:id/view', auth('common'), storyController.viewCountForMedia);
 
 //bookmark routes
 

@@ -43,9 +43,16 @@ const storySchema = new Schema<Istory, StoryIModel>({
   status:{
     type:String,enum:['pending','draft','post'],default:"pending"
   },
+  thumbnail: {
+    type: String,
+    required: [true, 'thumbnail is required']
+  },
+  duration: { type: String,default:"00:00:00" },
+  medianame: { type: String },
   shared:{
     type:Number,default:0
   },
+  viewCount: { type: Number, default: 0 },
   description: {
     type: String,
     required: [true, 'description is required']
