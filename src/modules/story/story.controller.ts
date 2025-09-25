@@ -63,7 +63,7 @@ const uploadStory = catchAsync(async (req, res) => {
     const thumbnailUrl = await uploadSingleFileToS3(thumbnailFile[0], `${STORY_UPLOADS_FOLDER}/thumbnails`);
     storyData.thumbnail = thumbnailUrl;
   } else {
-    storyData.thumbnail ='default-thumbnail.png';
+    storyData.thumbnail ='https://ibb.co.com/n8022CP8';
   }
 }
 

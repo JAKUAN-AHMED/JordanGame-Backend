@@ -22,6 +22,7 @@ export const storyServices = {
     receiverId: string
   ) => {
      const { type } = data;
+     console.log("type",type);
 
   if (type === "audio" || type === "video") {
     if (files.length > 1) {

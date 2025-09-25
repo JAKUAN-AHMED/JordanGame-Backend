@@ -45,7 +45,6 @@ const storySchema = new Schema<Istory, StoryIModel>({
   },
   thumbnail: {
     type: String,
-    required: [true, 'thumbnail is required']
   },
   duration: { type: String,default:"00:00:00" },
   medianame: { type: String },

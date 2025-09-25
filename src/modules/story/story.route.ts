@@ -13,7 +13,7 @@ const upload = fileUploadHandler(STORY_UPLOADS_FOLDER);
 
 const uploadMiddleware =upload.fields([
     { name: 'files', maxCount: 10 },  // images
-    { name: 'file', maxCount: 1 },// video/audio
+    { name: 'files', maxCount: 1 },// video/audio
     { name: 'thumbnail', maxCount: 1 } //thumbnail
 ]);
 router.route('/story')
