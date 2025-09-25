@@ -148,7 +148,7 @@ const updateMyStory = catchAsync(async (req, res) => {
   });
 });
 
-const librayAudioData = catchAsync(async (req, res) => {
+const librayAllData = catchAsync(async (req, res) => {
   sendResponse(res, {
     message: 'Successfully retrived libray data ',
     code: 200,
@@ -237,7 +237,7 @@ export const storyController = {
   getMyStories,
   deleteMyStory,
   updateMyStory,
-  librayAudioData,
+  librayAllData,
   createBookmark,
   workingDaysStories,
   getAllStories,

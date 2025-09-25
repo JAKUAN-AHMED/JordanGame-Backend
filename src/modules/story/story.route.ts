@@ -29,7 +29,7 @@ router.route('/stories')
 //every story begins with a step
 router.get('/story-steps', auth('common'), storyController.GetStorySteps);    
 
-router.get('/libraryData', auth('common'), storyController.librayAudioData);
+router.get('/libraryData', auth('common'), storyController.librayAllData);
 
 
 router.route('/story/:id')
