@@ -25,12 +25,17 @@ router.route('/story')
 router.route('/stories')
     .get(auth('common'), storyController.getMyStories)
 
+
+//every story begins with a step
+router.get('/story-steps', auth('common'), storyController.GetStorySteps);    
+
 router.get('/libraryData', auth('common'), storyController.librayAudioData);
 
 
 router.route('/story/:id')
     .delete(auth('common'), storyController.deleteMyStory)
     .patch(auth('common'), storyController.updateMyStory)
+    .get(auth('common'), storyController.singleStory)
 
 //VIEW COUNT
 router.patch('/story/:id/view', auth('common'), storyController.viewCountForMedia);

@@ -151,6 +151,16 @@ export const storyServices = {
     }
     return await Story.findOneAndDelete({ user, _id: id });
   },
+
+
+  //single story
+
+  singleStory:async(id:string)=>{
+    const story = await Story.findById(id).populate('user');
+    await NotFound(story,'Story Not found for this Id');
+    return story
+  },
+
   getMyStories: async (payload: {
     userId: string;
     query: Record<string, any>;
@@ -221,10 +231,9 @@ export const storyServices = {
       data: story,
     };
   },
- libraryData: async (query: Record<string, any>, user: string) => {
+ libraryData: async (query: Record<string, any>) => {
   // Find the user data
-  const userData = await User.findById(user);
-  await NotFound(userData, 'User Not Found');
+
 
   const types: ('audio' | 'video' | 'image')[] = ['audio', 'video', 'image'];
   const data: Record<string, any> = {};
@@ -237,7 +246,6 @@ export const storyServices = {
     const typeQuery = { 
       ...restQuery, 
       type, 
-      user: user,   // Filter by user ID
       page, 
       limit 
     };
@@ -265,6 +273,18 @@ export const storyServices = {
 
   return { data };
 },
+
+  //every story begins with a step
+
+  EstorybginWsteps: async () => {
+    const stories = await Story.find({ type: "video" , status: "post"}).populate('user').sort({ createdAt: -1 });
+    if(stories && stories.length === 0){
+      throw new AppError(404, 'Story Not found');
+    }
+    return stories
+  },
+
+
 
 
   //bookmark related services
