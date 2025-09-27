@@ -8,6 +8,8 @@ import { STORY_UPLOADS_FOLDER } from './stroy.constant';
 import { User } from '../user/user.model';
 
 const uploadStory = catchAsync(async (req, res) => {
+
+  // console.log('hitted',req);
   const userId = req.User.userId;
   const { caption, description, tags } = req.body;
 
@@ -33,6 +35,8 @@ const uploadStory = catchAsync(async (req, res) => {
 
   // Check media type (audio/video)
   const type = files[0]?.mimetype.split('/')[0]; // 'audio' or 'video'
+  console.log("type",files);
+
 
   // Initialize story data structure
   const storyData: any = {
@@ -40,7 +44,7 @@ const uploadStory = catchAsync(async (req, res) => {
     caption,
     description,
     tags: Array.isArray(tags) ? tags : [tags],
-    type,
+    type:type.toString(),
     medianame: files[0]?.originalname,
     mediaUrl: [],
     status: 'draft',
@@ -178,14 +182,10 @@ const deleteBookmark = catchAsync(async (req, res) => {
   });
 });
 const getSingleMyBookmark = catchAsync(async (req, res) => {
-  req.body.userId = req.User.userId as string;
   sendResponse(res, {
     message: 'Successfully Retrieved a  BookMark',
     code: 200,
-    data: await storyServices.getSingleMyBookmark({
-      userId: req.body.userId,
-      bookmarkId: req.body.bookmarkId,
-    }),
+    data: await storyServices.getSingleMyBookmark(req.params.bookmarkId as string),
   });
 });
 const getAllMyBookmark = catchAsync(async (req, res) => {

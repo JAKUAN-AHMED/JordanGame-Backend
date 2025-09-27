@@ -21,82 +21,85 @@ export const storyServices = {
     files: Express.Multer.File[],
     receiverId: string
   ) => {
-     const { type } = data;
-     console.log("type",type);
+    const { type } = data;
+    console.log('type', type);
 
-  if (type === "audio" || type === "video") {
-    if (files.length > 1) {
-      throw new Error('Only a single video/audio is allowed');
+    if (type === 'audio' || type === 'video') {
+      if (files.length > 1) {
+        throw new Error('Only a single video/audio is allowed');
+      }
+      if (!data.thumbnail) {
+        throw new Error('Thumbnail is required');
+      }
+      if (!data.medianame) {
+        throw new Error('Media name is required');
+      }
+
+      // Get the file path of the uploaded file (it could be from temp storage or buffer)
+      const filePath = files[0].path;
+
+      // Extract the duration of the audio/video file
+      const duration: string | any = await getMediaDuration(filePath);
+
+      // Check if the duration is provided, else use the extracted duration
+      if (data && !data.duration) {
+        data.duration = duration;
+      }
     }
-    if (!data.thumbnail) {
-      throw new Error('Thumbnail is required');
-    }
-    if (!data.medianame) {
-      throw new Error('Media name is required');
+
+    if (type === 'image' && files.length === 0) {
+      throw new Error('At least one image is required');
     }
 
-    // Get the file path of the uploaded file (it could be from temp storage or buffer)
-    const filePath = files[0].path;
-
-    // Extract the duration of the audio/video file
-    const duration:string|any = await getMediaDuration(filePath);
-
-    // Check if the duration is provided, else use the extracted duration
-    if (data && !data.duration) {
-      data.duration = duration;
+    if ((type === 'video' || type === 'audio') && files.length > 1) {
+      throw new Error('Only single video/audio is allowed');
     }
-  }
 
-  if (type === 'image' && files.length === 0) {
-    throw new Error('At least one image is required');
-  }
+    const mediaUrls: string[] = [];
+    for (const file of files) {
+      const url = await uploadSingleFileToS3(
+        file,
+        `${STORY_UPLOADS_FOLDER}/${type}`
+      );
+      mediaUrls.push(url as any);
+    }
 
-  if ((type === 'video' || type === 'audio') && files.length > 1) {
-    throw new Error('Only single video/audio is allowed');
-  }
+    const story = await Story.create({
+      ...data,
+      status: 'pending',
+      mediaUrl: mediaUrls,
+    });
 
-  const mediaUrls: string[] = [];
-  for (const file of files) {
-    const url = await uploadSingleFileToS3(file, `${STORY_UPLOADS_FOLDER}/${type}`);
-    mediaUrls.push(url as any);
-  }
+    let updatedStory = null;
+    if (Array.isArray(story?.mediaUrl) && Number(story.mediaUrl?.length) >= 1) {
+      updatedStory = await Story.findByIdAndUpdate(
+        { _id: story._id },
+        { status: 'post' },
+        { new: true, runValidators: true }
+      );
 
-  const story = await Story.create({
-    ...data,
-    status: 'pending',
-    mediaUrl: mediaUrls,
-  });
+      const user = await User.findById(data.user);
 
-  let updatedStory = null;
-  if (Array.isArray(story?.mediaUrl) && Number(story.mediaUrl?.length) >= 1) {
-    updatedStory = await Story.findByIdAndUpdate(
-      { _id: story._id },
-      { status: 'post' },
-      { new: true, runValidators: true }
-    );
+      const notification = {
+        receiverId,
+        title: `${user?.fname} Posted ${story.type} Story`,
+        senderId: data.user,
+        role: 'admin' as Role,
+      };
 
-    const user = await User.findById(data.user);
-
-    const notification = {
-      receiverId,
-      title: `${user?.fname} Posted ${story.type} Story`,
-      senderId: data.user,
-      role: 'admin' as Role,
-    };
-
-    await NotificationService.addCustomNotification(
-      'admin-notification',
-      notification,
-      receiverId
-    );
-  } else {
-    updatedStory = await Story.findByIdAndUpdate(
-      { _id: story._id },
-      { status: 'draft' },
-      { new: true, runValidators: true }
-    );
-  }
-  return updatedStory;
+      await NotificationService.addCustomNotification(
+        'admin-notification',
+        notification,
+        receiverId
+      );
+    } else {
+      updatedStory = await Story.findByIdAndUpdate(
+        { _id: story._id },
+        { status: 'draft' },
+        { new: true, runValidators: true }
+      );
+    }
+    return updatedStory;
   },
   deleteStroy: async (payload: { user: string; id: string }) => {
     const { user, id } = payload;
@@ -152,13 +155,12 @@ export const storyServices = {
     return await Story.findOneAndDelete({ user, _id: id });
   },
 
-
   //single story
 
-  singleStory:async(id:string)=>{
+  singleStory: async (id: string) => {
     const story = await Story.findById(id).populate('user');
-    await NotFound(story,'Story Not found for this Id');
-    return story
+    await NotFound(story, 'Story Not found for this Id');
+    return story;
   },
 
   getMyStories: async (payload: {
@@ -231,61 +233,59 @@ export const storyServices = {
       data: story,
     };
   },
- libraryData: async (query: Record<string, any>) => {
-  // Find the user data
+  libraryData: async (query: Record<string, any>) => {
+    // Find the user data
 
+    const types: ('audio' | 'video' | 'image')[] = ['audio', 'video', 'image'];
+    const data: Record<string, any> = {};
 
-  const types: ('audio' | 'video' | 'image')[] = ['audio', 'video', 'image'];
-  const data: Record<string, any> = {};
+    for (const type of types) {
+      // Extract pagination info for this type
+      const { page = 1, limit = 10, ...restQuery } = query[type] || {};
 
-  for (const type of types) {
-    // Extract pagination info for this type
-    const { page = 1, limit = 10, ...restQuery } = query[type] || {};
+      // Include the user filter in the query for each type (audio/video/image)
+      const typeQuery = {
+        ...restQuery,
+        type,
+        page,
+        limit,
+      };
 
-    // Include the user filter in the query for each type (audio/video/image)
-    const typeQuery = { 
-      ...restQuery, 
-      type, 
-      page, 
-      limit 
-    };
+      // Create a query builder with the updated query
+      const builder = new QueryBuilder(typeQuery, Story as any);
 
-    // Create a query builder with the updated query
-    const builder = new QueryBuilder(typeQuery, Story as any);
+      // Execute query with filters, search, sorting, pagination
+      const results = await builder
+        .filter(['type', 'user']) // Include 'user' in the filter fields
+        .search(['caption'])
+        .sort()
+        .paginate()
+        .execute();
 
-    // Execute query with filters, search, sorting, pagination
-    const results = await builder
-      .filter(['type', 'user'])  // Include 'user' in the filter fields
-      .search(['caption'])
-      .sort()
-      .paginate()
-      .execute();
+      // Get meta information for pagination
+      const meta = await builder.countTotal();
 
-    // Get meta information for pagination
-    const meta = await builder.countTotal();
+      // Store results and meta in the data object
+      data[type] = {
+        meta,
+        results,
+      };
+    }
 
-    // Store results and meta in the data object
-    data[type] = {
-      meta,
-      results,
-    };
-  }
-
-  return { data };
-},
+    return { data };
+  },
 
   //every story begins with a step
 
   EstorybginWsteps: async () => {
-    const stories = await Story.find({ type: "video" , status: "post"}).populate('user').sort({ createdAt: -1 });
-    if(stories && stories.length === 0){
+    const stories = await Story.find({ type: 'video', status: 'post' })
+      .populate('user')
+      .sort({ createdAt: -1 });
+    if (stories && stories.length === 0) {
       throw new AppError(404, 'Story Not found');
     }
-    return stories
+    return stories;
   },
-
-
-
 
   //bookmark related services
   bookmarkStory: async (payload: Ibookmark) => {
@@ -336,46 +336,39 @@ export const storyServices = {
     const storyFilter: any = {};
 
     if (query.type) {
-        storyFilter['story.type'] = query.type;
+      storyFilter['story.type'] = query.type;
     }
 
     // Aggregation pipeline
     const pipeline = [
-        {
-            $lookup: {
-                from: 'stories', 
-                localField: 'story', 
-                foreignField: '_id', 
-                as: 'story' 
-            }
+      {
+        $lookup: {
+          from: 'stories',
+          localField: 'story',
+          foreignField: '_id',
+          as: 'story',
         },
-        {
-            $unwind: '$story' 
-        },
+      },
+      {
+        $unwind: '$story',
+      },
 
-        
-        {
-            $match: storyFilter 
+      {
+        $match: storyFilter,
+      },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
+      {
+        $facet: {
+          data: [{ $skip: skip }, { $limit: limit }],
+          totalCount: [{ $count: 'total' }],
         },
-        {
-            $skip: skip
-        },
-        {
-            $limit: limit 
-        },
-        {
-            $facet: {
-                data: [ 
-                    { $skip: skip },
-                    { $limit: limit }
-                ],
-                totalCount: [ 
-                    { $count: 'total' }
-                ]
-            }
-        }
+      },
     ];
-
 
     // console.log("piepline", pipeline);
     // Execute the aggregation pipeline
@@ -386,28 +379,22 @@ export const storyServices = {
     const totalCount = result[0]?.totalCount?.[0]?.total || 0;
 
     return {
-        meta: {
-            total: totalCount,
-            page,
-            limit,
-        },
-        data,
+      meta: {
+        total: totalCount,
+        page,
+        limit,
+      },
+      data,
     };
-}
-,
-
-  getSingleMyBookmark: async (payload: {
-    userId: string;
-    bookmarkId: string;
-  }) => {
-    const { userId, bookmarkId } = payload;
-    return await bookmarkModel
-      .findOne({
-        _id: bookmarkId,
-        userId,
-      })
+  },
+  getSingleMyBookmark: async (bookmarkId: string) => {
+    const data = await bookmarkModel
+      .findOne({_id:bookmarkId})
       .populate('user')
       .populate('story');
+
+    console.log('data', data);
+    return data;
   },
   deleteBookmark: async (payload: { userId: string; bookmarkId: string }) => {
     const { userId, bookmarkId } = payload;
@@ -423,7 +410,6 @@ export const storyServices = {
 
   //all stories
   getAllStories: async (query: any) => {
-
     const limit = Number(query.limit) || 10;
     const page = Number(query.page) || 1;
     const skip = (page - 1) * limit;
@@ -479,13 +465,13 @@ export const storyServices = {
   },
 
   //view count
-  viewCountForMedia:async(isView:boolean,storyId:string) =>{
-    if(isView){
+  viewCountForMedia: async (isView: boolean, storyId: string) => {
+    if (isView) {
       return await Story.findOneAndUpdate(
         { _id: storyId },
         { $inc: { viewCount: 1 } },
         { new: true }
       );
     }
-  }
+  },
 };

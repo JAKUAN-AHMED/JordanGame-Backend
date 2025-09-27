@@ -13,7 +13,7 @@ const upload = fileUploadHandler(STORY_UPLOADS_FOLDER);
 
 const uploadMiddleware =upload.fields([
     { name: 'files', maxCount: 10 },  // images
-    { name: 'files', maxCount: 1 },// video/audio
+    { name: 'file', maxCount: 1 },// video/audio
     { name: 'thumbnail', maxCount: 1 } //thumbnail
 ]);
 router.route('/story')
@@ -44,17 +44,17 @@ router.patch('/story/:id/view', auth('common'), storyController.viewCountForMedi
 
 router.route('/bookmark')
     .post(auth('common'), storyController.createBookmark)
-    .get(auth('common'), storyController.getSingleMyBookmark)
     .delete(auth('common'), storyController.deleteBookmark)
 
+router.get('/bookmark/:bookmarkId', auth('common'), storyController.getSingleMyBookmark)    
 //working days api
 router.get('/working-days',auth('common'),storyController.workingDaysStories);
 
 
-router.get('/all-bookmark', auth('common'), storyController.getAllMyBookmark)
-router.get('/bookmarks/admin', auth('admin'), storyController.getAllBookmark)
+router.get('/all-My-bookmark', auth('common'), storyController.getAllMyBookmark)
+router.get('/bookmarks/admin', auth('common'), storyController.getAllBookmark)
 
 
 
-router.get('/all-stories',auth('admin'),storyController.getAllStories);
+router.get('/all-stories',auth('common'),storyController.getAllStories);
 export const StoryRoutes = router;

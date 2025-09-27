@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import auth from '../../middlewares/auth';
 import { feedbackController } from './feedback.controller';
-import { upload } from '../../helpers/File/FileUpload';
+import fileUploadHandler from '../../shared/fileUploadHandler';
+import { FEEDBACK_UPLOADS_FOLDER } from './feedback.constant';
 
 const router = Router();
 
+const upload=fileUploadHandler(FEEDBACK_UPLOADS_FOLDER);
 //send story
 router
   .route('/feedbacks')

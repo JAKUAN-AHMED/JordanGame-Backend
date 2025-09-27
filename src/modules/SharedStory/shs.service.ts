@@ -25,16 +25,16 @@ const createSharedStoryList = async (payload: Ishs) => {
   });
   await NotFound(storyExist, 'Story Not found for this Id');
 
-   await Story.findByIdAndUpdate(
-      story,
-      {
-        $inc: { shared: 1 },
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
-    )
+  await Story.findByIdAndUpdate(
+    story,
+    {
+      $inc: { shared: 1 },
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   //create and return sharedstory list
   return await shsModel.create(payload);
@@ -59,67 +59,50 @@ const SharedStoryList = async (query: any) => {
   }
 
   // Execute the aggregation pipeline
-  const data = await shsModel
-    .find(storyFilter)
-    .populate({ path: 'story', model: Story })
-    .populate({
-      path: 'sender',
-      populate: {
-        path: 'profile',
-        model: 'Profile',
-        select: 'avatar nickname',
+  const pipeline: any = [
+    {
+      $lookup: {
+        from: 'stories',
+        localField: 'story',
+        foreignField: '_id',
+        as: 'story',
       },
-      model: User,
-      select: 'fname role _id email createdAt',
-    })
-    .skip(skip)
-    .limit(limit)
-    .exec();
+    },
+    {
+      $unwind: '$story',
+    },
+    {
+      $match: storyFilter, // Move $match after $unwind
+    },
+    {
+      $facet: {
+        data: [
+          { $skip: skip },
+          { $limit: limit },
+        ],
+        totalCount: [
+          { $count: 'total' },
+        ],
+      },
+    },
+  ];
 
-  const filteredData: any = data.filter(item => {
-    let matches: boolean = true;
+  const result = await shsModel.aggregate(pipeline);
 
-    const storyDoc = item.story as typeof Story | any;
-
-    if (
-      storyFilter['story.type'] &&
-      storyDoc?.type !== storyFilter['story.type']
-    ) {
-      matches = false;
-    }
-
-    if (
-      storyFilter['story.status'] &&
-      storyDoc?.status !== storyFilter['story.status']
-    ) {
-      matches = false;
-    }
-
-    if (
-      storyFilter['story.createdAt'] &&
-      new Date(storyDoc?.createdAt) < storyFilter['story.createdAt']
-    ) {
-      matches = false;
-    }
-
-    return matches;
-  });
-
-  const total = await shsModel.countDocuments(storyFilter);
-
-  // Calculate total pages for pagination
-  const totalPages = Math.ceil(total / limit);
+  // Extract the result
+  const data = result[0]?.data || [];
+  const totalCount = result[0]?.totalCount?.[0]?.total || 0;
 
   return {
     meta: {
-      total,
+      total: totalCount,
       page,
       limit,
-      totalPages,
     },
-    data: filteredData,
+    data,
   };
 };
+
 
 const SingleShareList = async (shareListId: string) => {
   return await shsModel

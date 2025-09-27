@@ -23,6 +23,9 @@ const feedbackSchema=new Schema<Ifeedback>({
     imgurl:{
         type:String
     }
+},{
+    timestamps:true,
+    versionKey:false
 })
 
 export const feedbackModel=model<Ifeedback>('feedback',feedbackSchema);

@@ -63,6 +63,8 @@ const storySchema = new Schema<Istory, StoryIModel>({
     type: Date,
     default: () => new Date(+new Date() + 24 * 60 * 60 * 1000),
   },
+},{
+  versionKey:false
 });
 
 //delete story automatically

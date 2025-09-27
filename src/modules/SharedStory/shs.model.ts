@@ -18,7 +18,8 @@ const shsSchema = new Schema<Ishs>({
     ref: 'User',
   },
 },{
-    timestamps:true
+    timestamps:true,
+    versionKey:false
 });
 
 export const shsModel = model<Ishs>('SharedStoryList', shsSchema);

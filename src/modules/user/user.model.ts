@@ -47,7 +47,7 @@ const userSchema = new Schema<TUser, UserModal>(
     providerId: { type: String },
     fname: { type: String ,required:[true,'this is a required field']},
   },
-  { timestamps: true }
+  { timestamps: true,versionKey:false }
 );
 
 

@@ -28,6 +28,7 @@ const profileSchema = new Schema<TUserProfile, Profile>(
   },
   {
     timestamps: true,
+    versionKey:false
   }
 );
 

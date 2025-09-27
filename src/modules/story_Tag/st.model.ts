@@ -11,6 +11,10 @@ const tagSchema=new Schema<Ist,TagImodel>({
         type:[String],
         required:[true,'tag is required']
     }
+},
+{
+    timestamps:true,
+    versionKey:false
 })
 
 tagSchema.statics.isTagExistById=async function(id:string){

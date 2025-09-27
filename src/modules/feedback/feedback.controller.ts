@@ -4,7 +4,7 @@ import { feedbackServices } from './feedback.service';
 
 
 const createFeedback = catchAsync(async (req, res) => {
-  req.body.user = req.User.userId;
+  req.body.user = req.User.userId as string;
   sendResponse(res, {
     message: 'Successfully Given a feedback',
     code: 201,

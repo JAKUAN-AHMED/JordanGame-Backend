@@ -4,6 +4,7 @@ import { uploadSingleFileToS3 } from '../../helpers/S3Service';
 import { NotFound } from '../../utils/utils';
 import { Story } from '../story/story.model';
 import { User } from '../user/user.model';
+import { FEEDBACK_UPLOADS_FOLDER } from './feedback.constant';
 import { Ifeedback } from './feedback.interface';
 import { feedbackModel } from './feedback.model';
 
@@ -13,12 +14,12 @@ const createFeedback = async (
 ) => {
   const { story, user, comment, rating } = payload;
 
-  if (!story || !comment || !rating || !user || !file) {
-    throw new AppError(404, 'Requireed Filed is missing');
-  }
+  // if (!story || !comment || !rating  || !file) {
+  //   throw new AppError(404, 'Requireed Filed is missing');
+  // }
   let url: string = '';
   if (file) {
-    url = await uploadSingleFileToS3(file, `feedback/${'image'}`);
+    url = await uploadSingleFileToS3(file, `${FEEDBACK_UPLOADS_FOLDER}/${'image'}`);
     payload.imgurl = url as string;
   }
   //check user exist or not
