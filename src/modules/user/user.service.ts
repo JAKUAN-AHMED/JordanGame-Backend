@@ -8,6 +8,7 @@ import { OtpService } from '../otp/otp.service';
 import bcrypt from 'bcrypt';
 import { bookmarkModel, Story } from '../story/story.model';
 import { Notification } from '../notification/notification.model';
+import { profile } from 'console';
 interface MonthData {
   video: number;
   audio: number;
@@ -97,7 +98,7 @@ const getAllUsers = async (query: any) => {
     { $unwind: { path: '$profile', preserveNullAndEmptyArrays: true } },
     {
       $addFields: {
-        profileId: '$profile._id', // keep profile _id separately
+        profile: '$profile._id', // keep profile _id separately
         user: '$_id', // keep original user _id
       },
     },
