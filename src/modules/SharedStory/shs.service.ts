@@ -95,19 +95,19 @@ const SharedStoryList = async (query: any) => {
 
     {
       $project: {
-      "sender.email":1,
-      "sender.fname":1,
-      }
+        'sender.email': 1,
+        'sender.fname': 1,
+        'story.title': 1,
+        'story.description': 1,
+        'story.type': 1,
+        'story.status': 1,
+        'story.createdAt': 1,
+      },
     },
     {
       $facet: {
-        data: [
-          { $skip: skip },
-          { $limit: limit },
-        ],
-        totalCount: [
-          { $count: 'total' },
-        ],
+        data: [{ $skip: skip }, { $limit: limit }],
+        totalCount: [{ $count: 'total' }],
       },
     },
   ];
@@ -127,8 +127,6 @@ const SharedStoryList = async (query: any) => {
     data,
   };
 };
-
-
 
 const SingleShareList = async (shareListId: string) => {
   return await shsModel
