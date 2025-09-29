@@ -68,7 +68,7 @@ const storySchema = new Schema<Istory, StoryIModel>({
 });
 
 //delete story automatically
-storySchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+// storySchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 //is stroy exist
 storySchema.statics.isStoryExistById = async function (id: string) {

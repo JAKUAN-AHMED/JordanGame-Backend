@@ -68,11 +68,15 @@ const SharedStoryList = async (query: any) => {
         as: 'story',
       },
     },
+    // If the story can be null or empty, preserve it
     {
-      $unwind: '$story',
+      $unwind: {
+        path: '$story',
+        preserveNullAndEmptyArrays: true, // Keep entries even if 'story' is null
+      },
     },
     {
-      $match: storyFilter, // Move $match after $unwind
+      $match: storyFilter, // Apply filter for valid stories after unwind
     },
     {
       $facet: {
@@ -87,7 +91,7 @@ const SharedStoryList = async (query: any) => {
     },
   ];
 
-  const result = await shsModel.aggregate(pipeline);
+  const result = await shsModel.aggregate(pipeline as any);
 
   // Extract the result
   const data = result[0]?.data || [];
@@ -102,6 +106,7 @@ const SharedStoryList = async (query: any) => {
     data,
   };
 };
+
 
 
 const SingleShareList = async (shareListId: string) => {

@@ -71,7 +71,7 @@ const sendMessage = catchAsync(async (req, res) => {
     receiverId,
   };
 
-  console.log(payload);
+  // console.log(payload);
   // Send the message using the service
   const result = await MessageService.sendMessage(payload);
 

@@ -35,7 +35,7 @@ const uploadStory = catchAsync(async (req, res) => {
 
   // Check media type (audio/video)
   const type = files[0]?.mimetype.split('/')[0]; // 'audio' or 'video'
-  console.log("type",files);
+  // console.log("type",files);
 
 
   // Initialize story data structure

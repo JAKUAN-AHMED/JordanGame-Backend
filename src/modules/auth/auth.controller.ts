@@ -128,7 +128,7 @@ const refreshToken = catchAsync(async (req, res) => {
 
 const googleCallback = catchAsync(async (req, res) => {
   const user = req.user;
-  console.log("user",user);
+  // console.log("user",user);
   const tokens = await TokenService.accessAndRefreshToken(user as TUser);
 
   sendResponse(res,{

@@ -43,7 +43,7 @@ const AllFeedback = async (query: any) => {
 
   const respoData = await feedbackModel.find().populate('story').skip(skip).limit(limit);
 
-  console.log('Response', respoData);
+  // console.log('Response', respoData);
 
   const filterData = respoData.filter((item: any) => {
     if (query.type) {

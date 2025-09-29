@@ -4,6 +4,7 @@ import { User } from './user.model';
 import { Types } from 'mongoose';
 import { bookmarkModel, Story } from '../story/story.model';
 import { Notification } from '../notification/notification.model';
+import { shsModel } from '../SharedStory/shs.model';
 interface MonthData {
   video: number;
   audio: number;
@@ -125,25 +126,16 @@ const getAllUsers = async (query: any) => {
 //overview api
 const overview = async (yearToFetch: number) => {
   const totaluser = await User.countDocuments();
+  const totalStory = await Story.countDocuments();
   const totalBookmark = await bookmarkModel.countDocuments();
-  const totalSharedStories = await Story.countDocuments({ shared: true });
+  const totalSharedStories = await shsModel.countDocuments();
   const recentActivity = await Notification.find()
-  .select({ title: 1, createdAt: 1, _id: 0 })
-  .sort({ createdAt: -1 }).limit(10);
+    .select({ title: 1, createdAt: 1, _id: 0 })
+    .sort({ createdAt: -1 })
+    .limit(10);
 
   const monthNames = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ];
 
   const data = await Story.aggregate([
@@ -174,44 +166,66 @@ const overview = async (yearToFetch: number) => {
   // Initialize months with names
   const result: ResultType = {};
   result[yearToFetch] = {};
-  monthNames.forEach(name => {
+  monthNames.forEach((name) => {
     result[yearToFetch][name] = {
       video: 0,
       audio: 0,
       image: 0,
       videoPercent: 0,
-      imagepercent: 0,
       audioPercent: 0,
+      imagepercent: 0,
     };
   });
 
   // Fill counts
-  data.forEach(item => {
+  data.forEach((item) => {
     const monthIndex = item._id.month - 1;
     const monthName = monthNames[monthIndex];
     const type = item._id.type as MonthType;
     result[yearToFetch][monthName][type] = item.count;
   });
 
-  // Calculate percentages
-  monthNames.forEach(name => {
-    const monthData = result[yearToFetch][name];
-    const total = monthData.video + monthData.audio;
-    if (total > 0) {
-      monthData.videoPercent = (monthData.video / total) * 100;
-      monthData.audioPercent = (monthData.audio / total) * 100;
-      monthData.imagepercent = (monthData.image / total) * 100;
+  monthNames.forEach((name) => {
+  const monthData = result[yearToFetch][name];
+  const total = monthData.video + monthData.audio + monthData.image;
+
+  if (total > 0) {
+    monthData.videoPercent = parseFloat(((monthData.video / total) * 100).toFixed(2));
+    monthData.audioPercent = parseFloat(((monthData.audio / total) * 100).toFixed(2));
+    monthData.imagepercent = parseFloat(((monthData.image / total) * 100).toFixed(2));
+  }
+});
+
+// Normalize percentages to ensure they sum to 100 (or close)
+monthNames.forEach((name) => {
+  const monthData = result[yearToFetch][name];
+  const totalPercent = monthData.videoPercent + monthData.audioPercent + monthData.imagepercent;
+
+  // If the total is less than 100, adjust percentages proportionally
+  if (totalPercent < 100) {
+    const difference = 100 - totalPercent;
+    if (monthData.videoPercent > 0) {
+      monthData.videoPercent += (monthData.videoPercent / totalPercent) * difference;
     }
-  });
+    if (monthData.audioPercent > 0) {
+      monthData.audioPercent += (monthData.audioPercent / totalPercent) * difference;
+    }
+    if (monthData.imagepercent > 0) {
+      monthData.imagepercent += (monthData.imagepercent / totalPercent) * difference;
+    }
+  }
+});
 
   return {
     totalBookmark,
     totalSharedStories,
     totaluser,
+    totalStories: totalStory,
     data: result,
-    recentActivity
+    recentActivity,
   };
 };
+
 
 export const UserService = {
   createAdminOrSuperAdmin,

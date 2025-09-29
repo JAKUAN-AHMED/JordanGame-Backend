@@ -1,85 +1,85 @@
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import { User } from '../modules/user/user.model';
-import { Story } from '../modules/story/story.model';
-import users from '../data/users';
-import audioStroies from '../data/audioStroy';
-import videoStories from '../data/videoStories';
+// import mongoose from 'mongoose';
+// import dotenv from 'dotenv';
+// import { User } from '../modules/user/user.model';
+// import { Story } from '../modules/story/story.model';
+// import users from '../data/users';
+// import audioStroies from '../data/audioStroy';
+// import videoStories from '../data/videoStories';
 
-// Load environment variables
-dotenv.config();
-
-
+// // Load environment variables
+// dotenv.config();
 
 
-// Function to drop the entire database
-const dropDatabase = async () => {
-  try {
-    await mongoose.connection.dropDatabase();
-    console.log('------------> Database dropped successfully! <------------');
-  } catch (err) {
-    console.error('Error dropping database:', err);
-  }
-};
 
-// Function to seed users
-const seedUsers = async () => {
-  try {
-    await User.deleteMany();
-    await User.insertMany(users);
-    console.log('Users seeded successfully!');
-  } catch (err) {
-    console.error('Error seeding users:', err);
-  }
-};
-const seedStoryVideos = async () => {
-  try {
-    await Story.deleteMany();
-    await Story.insertMany(videoStories);
-    console.log('Story seeded successfully!');
-  } catch (err) {
-    console.error('Error seeding users:', err);
-  }
-};
-const seedStoryAudios = async () => {
-  try {
-    await Story.deleteMany();
-    await Story.insertMany(audioStroies);
-    console.log('Story seeded successfully!');
-  } catch (err) {
-    console.error('Error seeding users:', err);
-  }
-};
 
-// Connect to MongoDB
-const connectToDatabase = async () => {
-  try {
-    const dbUrl = process.env.MONGODB_URL;
-    if (!dbUrl) throw new Error('MONGODB_URL not set in environment variables');
+// // Function to drop the entire database
+// const dropDatabase = async () => {
+//   try {
+//     await mongoose.connection.dropDatabase();
+//     console.log('------------> Database dropped successfully! <------------');
+//   } catch (err) {
+//     console.error('Error dropping database:', err);
+//   }
+// };
 
-    await mongoose.connect(dbUrl);
-    console.log('Connected to MongoDB');
-  } catch (err) {
-    console.error('Error connecting to MongoDB:', err);
-    process.exit(1); // Exit process with failure
-  }
-};
+// // Function to seed users
+// const seedUsers = async () => {
+//   try {
+//     await User.deleteMany();
+//     await User.insertMany(users);
+//     console.log('Users seeded successfully!');
+//   } catch (err) {
+//     console.error('Error seeding users:', err);
+//   }
+// };
+// const seedStoryVideos = async () => {
+//   try {
+//     await Story.deleteMany();
+//     await Story.insertMany(videoStories);
+//     console.log('Story seeded successfully!');
+//   } catch (err) {
+//     console.error('Error seeding users:', err);
+//   }
+// };
+// const seedStoryAudios = async () => {
+//   try {
+//     await Story.deleteMany();
+//     await Story.insertMany(audioStroies);
+//     console.log('Story seeded successfully!');
+//   } catch (err) {
+//     console.error('Error seeding users:', err);
+//   }
+// };
 
-// Main function to seed the database
-const seedDatabase = async () => {
-  try {
-    await connectToDatabase();
-    await dropDatabase();
-    await seedUsers();
-    await seedStoryVideos();
-    await seedStoryAudios();
-    console.log('--------------> Database seeding completed <--------------');
-  } catch (err) {
-    console.error('Error seeding database:', err);
-  } finally {
-    mongoose.disconnect().then(() => console.log('Disconnected from MongoDB'));
-  }
-};
+// // Connect to MongoDB
+// const connectToDatabase = async () => {
+//   try {
+//     const dbUrl = process.env.MONGODB_URL;
+//     if (!dbUrl) throw new Error('MONGODB_URL not set in environment variables');
 
-// Execute seeding
-seedDatabase();
+//     await mongoose.connect(dbUrl);
+//     console.log('Connected to MongoDB');
+//   } catch (err) {
+//     console.error('Error connecting to MongoDB:', err);
+//     process.exit(1); // Exit process with failure
+//   }
+// };
+
+// // Main function to seed the database
+// const seedDatabase = async () => {
+//   try {
+//     await connectToDatabase();
+//     await dropDatabase();
+//     await seedUsers();
+//     await seedStoryVideos();
+//     await seedStoryAudios();
+//     console.log('--------------> Database seeding completed <--------------');
+//   } catch (err) {
+//     console.error('Error seeding database:', err);
+//   } finally {
+//     mongoose.disconnect().then(() => console.log('Disconnected from MongoDB'));
+//   }
+// };
+
+// // Execute seeding
+// seedDatabase();

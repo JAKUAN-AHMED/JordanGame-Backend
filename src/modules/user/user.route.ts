@@ -13,7 +13,7 @@ const upload=fileUploadHandler(USER_UPLOADS_FOLDER);
 const router = express.Router();
 
 //main routes
-router.route('/all-user').get(auth('common'), UserController.getAllUsers);
+router.route('/all-user').get(auth('admin'), UserController.getAllUsers);
 
 router
   .route('/single-user/:userId')

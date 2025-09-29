@@ -427,7 +427,7 @@ export const storyServices = {
     const data = await Story.find(storyFiler)
       .skip(skip)
       .limit(limit)
-      .select('caption type status createdAt _id');
+      .select('caption type status createdAt _id mediaUrl thumbnail');
     const total = await Story.countDocuments(storyFiler);
     return {
       meta: {
