@@ -79,6 +79,27 @@ const SharedStoryList = async (query: any) => {
       $match: storyFilter, // Apply filter for valid stories after unwind
     },
     {
+      $lookup: {
+        from: 'users',
+        localField: 'sender',
+        foreignField: '_id',
+        as: 'sender',
+      },
+    },
+    {
+      $unwind: {
+        path: '$sender',
+        preserveNullAndEmptyArrays: true, // Keep entries even if 'sender' is null
+      },
+    },
+
+    {
+      $project: {
+      "sender.email":1,
+      "sender.fname":1,
+      }
+    },
+    {
       $facet: {
         data: [
           { $skip: skip },
