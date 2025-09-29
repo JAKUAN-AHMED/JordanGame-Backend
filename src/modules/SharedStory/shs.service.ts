@@ -59,58 +59,73 @@ const SharedStoryList = async (query: any) => {
   }
 
   // Execute the aggregation pipeline
-  const pipeline: any = [
-    {
-      $lookup: {
-        from: 'stories',
-        localField: 'story',
-        foreignField: '_id',
-        as: 'story',
+ const pipeline: any = [
+  {
+    $lookup: {
+      from: 'stories',
+      localField: 'story',
+      foreignField: '_id',
+      as: 'story',
+    },
+  },
+  // If the story can be null or empty, preserve it
+  {
+    $unwind: {
+      path: '$story',
+      preserveNullAndEmptyArrays: true, // Keep entries even if 'story' is null
+    },
+  },
+  {
+    $match: storyFilter, // Apply filter for valid stories after unwind
+  },
+  {
+    $lookup: {
+      from: 'users',
+      localField: 'sender',
+      foreignField: '_id',
+      as: 'sender',
+    },
+  },
+  {
+    $unwind: {
+      path: '$sender',
+      preserveNullAndEmptyArrays: true, // Keep entries even if 'sender' is null
+    },
+  },
+  {
+    $project: {
+      // Select only the fields you need from sender and story
+      'sender.email': 1,
+      'sender.fname': 1,
+      'story.title': 1,
+      'story.description': 1,
+      'story.shared': 1,
+      'story.views': 1,
+      'story.duration': 1,
+      'story.createdAt': 1,
+      'story.updatedAt': 1,
+      'story.thumbnail': 1,
+      'story.mediaUrl': 1,
+      'story.tags': 1,
+      'story._id': 1,
+      'story.type': 1,
+      'story.status': 1,
+    },
+  },
+  {
+    $replaceRoot: {
+      newRoot: {
+        $mergeObjects: ['$story', { sender: '$sender' }],
       },
     },
-    // If the story can be null or empty, preserve it
-    {
-      $unwind: {
-        path: '$story',
-        preserveNullAndEmptyArrays: true, // Keep entries even if 'story' is null
-      },
+  },
+  {
+    $facet: {
+      data: [{ $skip: skip }, { $limit: limit }],
+      totalCount: [{ $count: 'total' }],
     },
-    {
-      $match: storyFilter, // Apply filter for valid stories after unwind
-    },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'sender',
-        foreignField: '_id',
-        as: 'sender',
-      },
-    },
-    {
-      $unwind: {
-        path: '$sender',
-        preserveNullAndEmptyArrays: true, // Keep entries even if 'sender' is null
-      },
-    },
-
-    {
-      $project: {
-        'sender.email': 1,
-        'sender.fname': 1,
-        'story.title': 1,
-        'story.description': 1,
-        'story.type': 1,
-        'story.status': 1,
-        'story.createdAt': 1,
-      },
-    },
-    {
-      $facet: {
-        data: [{ $skip: skip }, { $limit: limit }],
-        totalCount: [{ $count: 'total' }],
-      },
-    },
-  ];
+  },
+];
 
   const result = await shsModel.aggregate(pipeline as any);
 
