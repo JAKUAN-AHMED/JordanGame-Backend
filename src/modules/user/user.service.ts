@@ -2,29 +2,8 @@ import AppError from '../../errors/AppError';
 import { TUser } from './user.interface';
 import { User } from './user.model';
 import { Types } from 'mongoose';
-<<<<<<< HEAD
-=======
-import { bookmarkModel, Story } from '../story/story.model';
-import { Notification } from '../notification/notification.model';
-import { shsModel } from '../SharedStory/shs.model';
->>>>>>> ef2fa59b1a6317858df4b19a14b5c04ededa506d
-interface MonthData {
-  video: number;
-  audio: number;
-  image: number;
-  videoPercent: number;
-  imagepercent: number;
-  audioPercent: number;
-}
 
-interface YearlyData {
-  [month: string]: MonthData; // month name as key
-}
 
-type MonthType = 'video' | 'audio' | 'image';
-interface ResultType {
-  [year: number]: YearlyData; // year as key
-}
 const createAdminOrSuperAdmin = async (payload: TUser) => {
   const existingUser = await User.findOne({ email: payload.email });
  if(!existingUser){
@@ -127,110 +106,6 @@ const getAllUsers = async (query: any) => {
 };
 
 //overview api
-<<<<<<< HEAD
-=======
-const overview = async (yearToFetch: number) => {
-  const totaluser = await User.countDocuments();
-  const totalStory = await Story.countDocuments();
-  const totalBookmark = await bookmarkModel.countDocuments();
-  const totalSharedStories = await shsModel.countDocuments();
-  const recentActivity = await Notification.find()
-    .select({ title: 1, createdAt: 1, _id: 0 })
-    .sort({ createdAt: -1 })
-    .limit(10);
-
-  const monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-
-  const data = await Story.aggregate([
-    {
-      $match: {
-        status: 'post',
-        type: { $in: ['video', 'audio', 'image'] },
-        createdAt: {
-          $gte: new Date(`${yearToFetch}-01-01`),
-          $lt: new Date(`${yearToFetch + 1}-01-01`),
-        },
-      },
-    },
-    {
-      $project: {
-        type: 1,
-        month: { $month: '$createdAt' },
-      },
-    },
-    {
-      $group: {
-        _id: { month: '$month', type: '$type' },
-        count: { $sum: 1 },
-      },
-    },
-  ]);
-
-  // Initialize months with names
-  const result: ResultType = {};
-  result[yearToFetch] = {};
-  monthNames.forEach((name) => {
-    result[yearToFetch][name] = {
-      video: 0,
-      audio: 0,
-      image: 0,
-      videoPercent: 0,
-      audioPercent: 0,
-      imagepercent: 0,
-    };
-  });
-
-  // Fill counts
-  data.forEach((item) => {
-    const monthIndex = item._id.month - 1;
-    const monthName = monthNames[monthIndex];
-    const type = item._id.type as MonthType;
-    result[yearToFetch][monthName][type] = item.count;
-  });
-
-  monthNames.forEach((name) => {
-  const monthData = result[yearToFetch][name];
-  const total = monthData.video + monthData.audio + monthData.image;
-
-  if (total > 0) {
-    monthData.videoPercent = parseFloat(((monthData.video / total) * 100).toFixed(2));
-    monthData.audioPercent = parseFloat(((monthData.audio / total) * 100).toFixed(2));
-    monthData.imagepercent = parseFloat(((monthData.image / total) * 100).toFixed(2));
-  }
-});
-
-// Normalize percentages to ensure they sum to 100 (or close)
-monthNames.forEach((name) => {
-  const monthData = result[yearToFetch][name];
-  const totalPercent = monthData.videoPercent + monthData.audioPercent + monthData.imagepercent;
-
-  // If the total is less than 100, adjust percentages proportionally
-  if (totalPercent < 100) {
-    const difference = 100 - totalPercent;
-    if (monthData.videoPercent > 0) {
-      monthData.videoPercent += (monthData.videoPercent / totalPercent) * difference;
-    }
-    if (monthData.audioPercent > 0) {
-      monthData.audioPercent += (monthData.audioPercent / totalPercent) * difference;
-    }
-    if (monthData.imagepercent > 0) {
-      monthData.imagepercent += (monthData.imagepercent / totalPercent) * difference;
-    }
-  }
-});
-
-  return {
-    totalBookmark,
-    totalSharedStories,
-    totaluser,
-    totalStories: totalStory,
-    data: result,
-    recentActivity,
-  };
-};
->>>>>>> ef2fa59b1a6317858df4b19a14b5c04ededa506d
 
 
 export const UserService = {
