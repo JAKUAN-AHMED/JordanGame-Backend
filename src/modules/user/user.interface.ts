@@ -13,7 +13,6 @@ export type TUser = {
   email: string;
   password?: string;
   confirmpassword?: string;
-  phone:string;
   role: Role;
   isEmailVerified: boolean;
   lastPasswordChange: Date;

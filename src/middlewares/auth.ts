@@ -12,7 +12,7 @@ import { TokenService } from '../modules/token/token.service';
 const auth = (...roles: string[]) =>
   catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     // Step 1: Get Authorization Header
-    const tokenWithBearer = req.headers.authorization;
+    const tokenWithBearer = req.headers.authorization?.split(' ')[1];
     if (!tokenWithBearer) {
       throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized');
     }

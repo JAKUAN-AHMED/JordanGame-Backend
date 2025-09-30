@@ -32,9 +32,6 @@ const SetUpProfile = async (payload: TUserProfile) => {
     )
   }
 
-  
-
-
   return profile;
 
 };
@@ -73,7 +70,7 @@ const updateProfile = async (id: string, payload: Partial<TUserProfile> & {fname
 
 
 const myProfile = async (id: string) => {
-  const user=await User.findById(id).populate('profile')
+  const user=await User.findById(id).populate('profile');
   await NotFound(user,'User Not Found');
 
   return user;

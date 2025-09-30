@@ -37,16 +37,9 @@ const getSingleUser = catchAsync(async (req, res) => {
 
 //update user status from database
 
-const overview = catchAsync(async (req, res) => {
-  sendResponse(res, {
-    message: 'SuccessfullyRetreived Data ',
-    code: 200,
-    data: await UserService.overview(req.body.year as number),
-  });
-});
+
 export const UserController = {
   createAdminOrSuperAdmin,
   getAllUsers,
   getSingleUser,
-  overview
 };

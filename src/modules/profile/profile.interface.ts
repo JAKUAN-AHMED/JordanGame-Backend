@@ -12,9 +12,9 @@ export type TUserProfile = {
   _id: Types.ObjectId;
   user: Types.ObjectId;
   gender: GENDER;
-  aboutself: string;
-  nickname?:string;
-  dateofBirth:Date;
+  address: string;
+  country:string;
+  phone: string;
   avatar?:string;
 };
 

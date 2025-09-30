@@ -41,8 +41,8 @@ const createUser = async (userData: TUser) => {
         existingUser
       );
       //create verification email otp
-      await OtpService.createVerificationEmailOtp(existingUser.email);
-      return { verificationToken };
+      const otp=await OtpService.createVerificationEmailOtp(existingUser.email);
+      return { verificationToken,otp:otp.otp };
     }
   }
 
@@ -62,8 +62,8 @@ const createUser = async (userData: TUser) => {
   //create verification email token
   const verificationToken = await TokenService.createVerifyEmailToken(user);
   //create verification email otp
-  await OtpService.createVerificationEmailOtp(user.email);
-  return { verificationToken };
+  const otpDoc=await OtpService.createVerificationEmailOtp(user.email);
+  return { verificationToken,otp:otpDoc.otp };
 };
 
 const login = async (email: string, reqpassword: string) => {
@@ -195,7 +195,8 @@ const resetPassword = async (
   user.isResetPassword = false;
   await user.save();
 
-  return user;
+  const { password:newPassword, ...userWithoutPassword } = user.toObject();
+  return userWithoutPassword;
 };
 
 const changePassword = async (
@@ -217,7 +218,7 @@ const changePassword = async (
     throw new AppError(StatusCodes.UNAUTHORIZED, 'Password is incorrect');
   }
 
-  user.password = newPassword;
+  user.password = await bcrypt.hash(newPassword, 10 as number);
   await user.save();
   const { password, ...userWithoutPassword } = user.toObject();
   return userWithoutPassword;

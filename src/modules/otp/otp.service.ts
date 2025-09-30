@@ -88,6 +88,7 @@ const createVerificationEmailOtp = async (email: string) => {
   return otpDoc;
 };
 
+
 const createResetPasswordOtp = async (email: string) => {
   const otpDoc = await createOTP(
     email,

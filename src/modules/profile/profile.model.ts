@@ -8,8 +8,9 @@ const profileSchema = new Schema<TUserProfile, Profile>(
       type:Schema.Types.ObjectId,
       default: () => new Types.ObjectId(),
     },
+    country: { type: String, required: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    aboutself: { type: String, required: true },
+    phone: { type: String, required: true },
     gender: {
       type: String,
       enum: ['Male', 'Female','Other'],
@@ -18,16 +19,14 @@ const profileSchema = new Schema<TUserProfile, Profile>(
     avatar:{
       type:String
     },
-    nickname:{
+    address:{
       type:String
     },
-    dateofBirth:{
-      type:Date,
-      required:true
-    }
+
   },
   {
     timestamps: true,
+    versionKey: false,
   }
 );
 

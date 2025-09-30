@@ -38,4 +38,4 @@ export const MaritalStatus: IMaritalStatus[] = [
 ];
 
 
-export const USER_UPLOADS_FOLDER = 'demoUpload/p1/users';
+export const USER_UPLOADS_FOLDER = 'demoUpload/p3/users';

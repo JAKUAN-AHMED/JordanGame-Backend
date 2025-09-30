@@ -1,9 +1,9 @@
-import { Types } from "mongoose";
+// import { Types } from "mongoose";
 
-export interface Ifeedback{
-    story:Types.ObjectId,
-    user:Types.ObjectId,
-    comment:string,
-    rating:number,
-    imgurl:string
-}
+// export interface Ifeedback{
+//     story:Types.ObjectId,
+//     user:Types.ObjectId,
+//     comment:string,
+//     rating:number,
+//     imgurl:string
+// }

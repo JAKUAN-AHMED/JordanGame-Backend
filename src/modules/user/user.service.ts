@@ -3,12 +3,6 @@ import AppError from '../../errors/AppError';
 import { TUser } from './user.interface';
 import { User } from './user.model';
 import { Types } from 'mongoose';
-import { TokenService } from '../token/token.service';
-import { OtpService } from '../otp/otp.service';
-import bcrypt from 'bcrypt';
-import { bookmarkModel, Story } from '../story/story.model';
-import { Notification } from '../notification/notification.model';
-import { profile } from 'console';
 interface MonthData {
   video: number;
   audio: number;
@@ -128,99 +122,9 @@ const getAllUsers = async (query: any) => {
 };
 
 //overview api
-const overview = async (yearToFetch: number) => {
-  const totaluser = await User.countDocuments();
-  const totalBookmark = await bookmarkModel.countDocuments();
-  const totalSharedStories = await Story.countDocuments({ shared: true });
-  const recentActivity = await Notification.find()
-  .select({ title: 1, createdAt: 1, _id: 0 })
-  .sort({ createdAt: -1 }).limit(10);
-
-  const monthNames = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-
-  const data = await Story.aggregate([
-    {
-      $match: {
-        status: 'post',
-        type: { $in: ['video', 'audio', 'image'] },
-        createdAt: {
-          $gte: new Date(`${yearToFetch}-01-01`),
-          $lt: new Date(`${yearToFetch + 1}-01-01`),
-        },
-      },
-    },
-    {
-      $project: {
-        type: 1,
-        month: { $month: '$createdAt' },
-      },
-    },
-    {
-      $group: {
-        _id: { month: '$month', type: '$type' },
-        count: { $sum: 1 },
-      },
-    },
-  ]);
-
-  // Initialize months with names
-  const result: ResultType = {};
-  result[yearToFetch] = {};
-  monthNames.forEach(name => {
-    result[yearToFetch][name] = {
-      video: 0,
-      audio: 0,
-      image: 0,
-      videoPercent: 0,
-      imagepercent: 0,
-      audioPercent: 0,
-    };
-  });
-
-  // Fill counts
-  data.forEach(item => {
-    const monthIndex = item._id.month - 1;
-    const monthName = monthNames[monthIndex];
-    const type = item._id.type as MonthType;
-    result[yearToFetch][monthName][type] = item.count;
-  });
-
-  // Calculate percentages
-  monthNames.forEach(name => {
-    const monthData = result[yearToFetch][name];
-    const total = monthData.video + monthData.audio;
-    if (total > 0) {
-      monthData.videoPercent = (monthData.video / total) * 100;
-      monthData.audioPercent = (monthData.audio / total) * 100;
-      monthData.imagepercent = (monthData.image / total) * 100;
-    }
-  });
-
-  return {
-    totalBookmark,
-    totalSharedStories,
-    totaluser,
-    data: result,
-    recentActivity
-  };
-};
 
 export const UserService = {
   createAdminOrSuperAdmin,
   getAllUsers,
   getSingleUser,
-  overview,
 };

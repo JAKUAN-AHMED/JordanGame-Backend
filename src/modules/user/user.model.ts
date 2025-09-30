@@ -35,7 +35,6 @@ const userSchema = new Schema<TUser, UserModal>(
       default: "user",
     },
     isEmailVerified: { type: Boolean, default: false },
-    phone: { type: String },
     lastPasswordChange: { type: Date },
     isResetPassword: { type: Boolean, default: false },
     failedLoginAttempts: { type: Number, default: 0 },
