@@ -18,19 +18,19 @@ const execPromise = util.promisify(exec);
 const FILE_LIMITS = {
   images: {
     extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'],
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 100 * 1024 * 1024, // 10MB
   },
   documents: {
     extensions: ['pdf', 'doc', 'docx', 'txt'],
-    maxSize: 50 * 1024 * 1024, // 50MB
+    maxSize: 100 * 1024 * 1024, // 50MB
   },
   videos: {
     extensions: ['mp4', 'avi', 'mov', 'wmv'],
-    maxSize: 100 * 1024 * 1024, // 100MB
+    maxSize: 500 * 1024 * 1024, // 100MB
   },
   audio: {
     extensions: ['mp3', 'wav', 'ogg'],
-    maxSize: 20 * 1024 * 1024, // 20MB
+    maxSize: 500 * 1024 * 1024, // 20MB
   },
 };
 

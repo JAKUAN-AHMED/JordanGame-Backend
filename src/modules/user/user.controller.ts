@@ -37,7 +37,6 @@ const getSingleUser = catchAsync(async (req, res) => {
 
 //update user status from database
 
-
 export const UserController = {
   createAdminOrSuperAdmin,
   getAllUsers,

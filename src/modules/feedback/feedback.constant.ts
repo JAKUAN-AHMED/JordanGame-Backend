@@ -1,0 +1,1 @@
+export const FEEDBACK_UPLOADS_FOLDER = 'demoUploads/P1/feedback';

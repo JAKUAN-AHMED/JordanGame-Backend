@@ -57,7 +57,7 @@ const messageSchema = new Schema<IMessage, IMessageModel>(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true,versionKey:false }
 );
 
 messageSchema.index({ chatId: 1, createdAt: 1 });

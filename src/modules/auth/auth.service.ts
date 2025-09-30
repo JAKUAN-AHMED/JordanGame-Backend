@@ -151,10 +151,10 @@ const forgotPassword = async (email: string) => {
   }
   //create reset password token
   const resetPasswordToken = await TokenService.createResetPasswordToken(user);
-  const otpDoc=await OtpService.createResetPasswordOtp(user.email);
+ await OtpService.createResetPasswordOtp(user.email);
   user.isResetPassword = true;
   await user.save();
-  return { resetPasswordToken ,otp:otpDoc.otp};
+  return { resetPasswordToken};
 };
 
 const resendOtp = async (email: string) => {

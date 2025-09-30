@@ -52,6 +52,7 @@
 //     }
 // }
 
+// };
 
 // const SingleFeedbackList=async(feedbackId:string)=>{
 //     return await feedbackModel.findById(feedbackId).populate('story');
