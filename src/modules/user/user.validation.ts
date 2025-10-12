@@ -2,6 +2,12 @@ import { z } from 'zod';
 
 export const createUserValidationSchema = z.object({
   body: z.object({
+    fullName: z
+      .string({
+        required_error: 'Full name is required.',
+        invalid_type_error: 'Full name must be a string.',
+      })
+      .min(2, 'Full name must be at least 2 characters long.'),
     email: z
       .string({
         required_error: 'Email is required.',
@@ -14,9 +20,15 @@ export const createUserValidationSchema = z.object({
         invalid_type_error: 'Password must be a string.',
       })
       .min(8, 'Password must be at least 8 characters long.'),
+    profileImage: z.string().optional(),
     role: z
-      .enum(['ADMIN', 'STAF', 'SUPERADMIN', 'BUSINESS', 'USER'])
-      .default('USER'),
+      .enum(['admin', 'user'])
+      .default('user')
+      .optional(),
+    profileStatus: z
+      .enum(['active', 'delete', 'block', 'suspend', 'disabled'])
+      .default('active')
+      .optional(),
   }),
 });
 
@@ -37,12 +49,9 @@ export const updateUserValidationSchema = z.object({
 // ✅ Change status schema (strict for PATCH status)
 export const changeUserStatusValidationSchema = z.object({
   body: z.object({
-    status: z
-      .object({
-        isDeleted: z.boolean().optional(),
-        isBlocked: z.boolean().optional(),
-        isDeactivated: z.boolean().optional(),
-      }),
+    profileStatus: z
+      .enum(['active', 'delete', 'block', 'suspend', 'disabled'])
+      .optional(),
   }),
 });
 

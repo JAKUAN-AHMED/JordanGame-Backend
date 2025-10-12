@@ -35,7 +35,14 @@ const auth = (...roles: string[]) =>
         StatusCodes.BAD_REQUEST,
         'Your account is not verified.'
       );
+    } else if (user.profileStatus === 'block' || user.profileStatus === 'suspend' || user.profileStatus === 'delete') {
+      // Block users who are blocked, suspended, or deleted - they cannot access anything
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        `Your account is ${user.profileStatus}. Please contact support.`
+      );
     }
+    // Note: Users with 'disabled' status can still authenticate to reactivate their account
 
     // Step 5: Role-based Authorization
     if (roles.length) {

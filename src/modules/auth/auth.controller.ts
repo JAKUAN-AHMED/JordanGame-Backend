@@ -99,10 +99,19 @@ const resetPassword = catchAsync(async (req, res) => {
 });
 
 const logout = catchAsync(async (req, res) => {
-  if(!req.body.refreshToken){
-    throw new AppError(404,'Token Not Found');
+  // Get access token from header
+  const accessToken = req.headers.authorization?.split(' ')[1];
+  const refreshToken = req.body.refreshToken;
+
+  if(!accessToken && !refreshToken){
+    throw new AppError(StatusCodes.BAD_REQUEST,'Token Not Found');
   }
-  await AuthService.logout(req.body.refreshToken);
+
+  await AuthService.logout(accessToken, refreshToken);
+
+  // Clear refresh token cookie
+  res.clearCookie('refreshToken');
+
   sendResponse(res, {
     code: StatusCodes.OK,
     message: 'User logged out successfully',

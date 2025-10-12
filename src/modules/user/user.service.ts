@@ -2,10 +2,8 @@ import { StatusCodes } from 'http-status-codes';
 import AppError from '../../errors/AppError';
 import { TUser } from './user.interface';
 import { User } from './user.model';
-import { Types } from 'mongoose';
-
-// import { ProfileModel } from '../profile/profile.model';
 import { isUserDeleted, NotFound, validateUserStatus } from '../../utils/utils';
+import { TUserStatus, UserStatus } from './user.constant';
 
 
 
@@ -49,25 +47,40 @@ const getSingleUser = async (userId: string): Promise<TUser | null> => {
   return result;
 };
 
+const UpdateProfile = async (userId: string,payload:Partial<TUser>)=> {
+  const result = await User.findById(userId, '-password');
+  if (!result) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  const updatedUser = await User.findOneAndUpdate(
+    { _id: userId },
+    { $set: payload },
+    { new: true, runValidators: true, select: '-password' }
+  )
+  return updatedUser;
+};
+
 const updateUserStatus = async (
   userId: string,
-  payload: { status: string }
-): Promise<any> => {
-  if (!payload.status) {
-    throw new AppError(StatusCodes.BAD_REQUEST, 'Status payload is required');
+  profileStatus:TUserStatus
+)=> {
+  if (!profileStatus) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Profile status payload is required');
   }
 
   // Validate status value
-  const validStatuses = ['active', 'inactive', 'block', 'delete', 'suspend', 'disabled'];
-  if (!validStatuses.includes(payload.status)) {
-    throw new AppError(StatusCodes.BAD_REQUEST, `Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+  
+  if (!UserStatus.includes(profileStatus)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, `Invalid status. Must be one of: ${UserStatus.join(', ')}`);
   }
 
   // Update user directly
   const result = await User.findByIdAndUpdate(
     userId,
-    { $set: { status: payload.status } },
+    { $set: { profileStatus: profileStatus } },
     { new: true, select: '-password' }
+    
   );
 
   if (!result) {
@@ -100,13 +113,23 @@ const getAllUsers = async (query: any) => {
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const users = await User.find({ isEmailVerified: true })
+
+  const filters: Record<string, any> = {
+    isEmailVerified: true
+  };
+  if (query.searchTerm) {
+    filters.$or = [
+      { fullName: { $regex: query.searchTerm, $options: 'i' } },
+      { email: { $regex: query.searchTerm, $options: 'i' } },
+    ];
+  }
+  const users = await User.find(filters)
     .select('-password')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
 
-  const total = await User.countDocuments({ isEmailVerified: true });
+  const total = await User.countDocuments(filters);
   const totalPage = Math.ceil(total / limit);
 
   return {
@@ -142,9 +165,34 @@ const ActivateDeactivateAccount = async (
     throw new AppError(404, 'User not found');
   }
 
+  // Check if user is suspended or blocked - they cannot change their status
+  if (user.profileStatus === 'suspend') {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      'Your account is suspended. Please contact support to reactivate your account.'
+    );
+  }
+
+  if (user.profileStatus === 'block') {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      'Your account is blocked. Please contact support to unblock your account.'
+    );
+  }
+
+  if (user.profileStatus === 'delete') {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      'Your account is marked for deletion. Please contact support to recover your account.'
+    );
+  }
+
+  // User can only toggle between 'active' and 'disabled'
+  const newStatus = isDeactivated ? 'disabled' : 'active';
+
   return await User.findByIdAndUpdate(
     userId,
-    { $set: { isEmailVerified: !isDeactivated } },
+    { $set: { profileStatus: newStatus } },
     { new: true, runValidators: true, select: '-password' }
   );
 };
@@ -155,6 +203,7 @@ export const UserService = {
   createAdminOrSuperAdmin,
   getAllUsers,
   getSingleUser,
+  UpdateProfile,
   updateUserStatus,
   getMyProfile,
   deleteMyProfile,

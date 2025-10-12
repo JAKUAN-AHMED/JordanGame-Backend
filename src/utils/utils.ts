@@ -17,7 +17,7 @@ export const AlreadyExist = async (item: any) => {
 };
 
 export const isUserDeleted = async (profile: any) => {
-  if (profile && profile.status === 'delete') {
+  if (profile && profile.profileStatus === 'delete') {
     throw new AppError(StatusCodes.BAD_REQUEST, 'This profile has been deleted');
   }
 };
@@ -28,10 +28,10 @@ export const validateUserStatus = async (profile: any) => {
   }
 
   const invalidStatuses = ['delete', 'block', 'suspend', 'disabled'];
-  if (invalidStatuses.includes(profile.status)) {
+  if (invalidStatuses.includes(profile.profileStatus)) {
     throw new AppError(
       StatusCodes.FORBIDDEN,
-      `Account is ${profile.status}. Please contact support.`
+      `Account is ${profile.profileStatus}. Please contact support.`
     );
   }
 };

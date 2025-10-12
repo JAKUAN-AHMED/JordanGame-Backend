@@ -1,8 +1,8 @@
 export type Role = 'admin' | 'user';
 
-export type TUserStatus = 'active' | 'delete' | 'block';
+export type TUserStatus = 'active' | 'delete' | 'block'| 'suspend' | 'disabled';
 
-export const UserStatus: TUserStatus[] = ['active', 'block', 'delete'];
+export const UserStatus: TUserStatus[] = ['active', 'block', 'delete', 'suspend', 'disabled'];
 
 export type TGender = 'male' | 'female' | 'transgender' | 'other';
 

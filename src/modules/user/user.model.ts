@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import { config } from '../../config';
 import { Roles } from '../../middlewares/roles';
 import paginationPlugin from '../../common/plugins/paginate';
+import { UserStatus } from './user.constant';
 
 // User Schema Definition
 const userSchema = new Schema<TUser, UserModal>(
@@ -41,6 +42,14 @@ const userSchema = new Schema<TUser, UserModal>(
       },
       required: [true, 'Role is required'],
       default: 'user',
+    },
+    profileStatus: {
+      type: String,
+      enum: {
+        values: UserStatus,
+        message: '{VALUE} is not a valid profile status',
+      },
+      default: 'active',
     },
     isEmailVerified: {
       type: Boolean,

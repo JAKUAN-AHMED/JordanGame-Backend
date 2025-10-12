@@ -36,12 +36,35 @@ const getSingleUser = catchAsync(async (req, res) => {
     message: 'User fetched successfully',
   });
 });
+//update user profile
+const UpdateProfile = catchAsync(async (req, res) => {
+  const userId = (req.user as any)?.userId;
+  if (!userId) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'You are unauthenticated.');
+  }
+  const result = await UserService.UpdateProfile(userId, req.body);
+  sendResponse(res, {
+    code: StatusCodes.OK,
+    data: result ? result : [],
+    message: 'Profile updated successfully',
+  });
+});
 
-//update user status from database
+//update user status from database (Admin only)
 const updateUserStatus = catchAsync(async (req, res) => {
+  // Admin updates other user's status via params.userId
   const { userId } = req.params;
-  const payload = req.body;
-  const result = await UserService.updateUserStatus(userId, payload);
+  const { profileStatus } = req.body;
+
+  if (!userId) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'userId is required in URL params');
+  }
+
+  if (!profileStatus) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'profileStatus is required in request body');
+  }
+
+  const result = await UserService.updateUserStatus(userId, profileStatus);
   sendResponse(res, {
     code: StatusCodes.OK,
     data: result,
@@ -79,15 +102,33 @@ const deleteMyProfile = catchAsync(async (req, res) => {
 //active || deactivate
 
 const ActivateDeactivateAccount = catchAsync(async (req, res) => {
+  const userId = (req.user as any)?.userId;
+  if (!userId) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'You are unauthenticated.');
+  }
+
+  const { isDeactivated } = req.body;
+
+  if (typeof isDeactivated !== 'boolean') {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'isDeactivated field is required and must be a boolean.'
+    );
+  }
+
   const result = await UserService.ActivateDeactivateAccount(
-    (req.user as any)?.userId as string,
-    req.body.isDeactivated
+    userId,
+    isDeactivated
   );
-  const isOk = result ? true : false;
+
+  const statusMessage = isDeactivated
+    ? 'Account deactivated successfully'
+    : 'Account activated successfully';
+
   sendResponse(res, {
-    code: isOk ? 201 : 404,
-    message: isOk ? 'Successfully Changed Status' : 'Failed to Change Status',
-    data: isOk ? result : [],
+    code: StatusCodes.OK,
+    message: statusMessage,
+    data: result,
   });
 });
 const recoverAccount = catchAsync(async (req, res) => {
@@ -107,6 +148,7 @@ const recoverAccount = catchAsync(async (req, res) => {
 export const UserController = {
   createAdminOrSuperAdmin,
   getAllUsers,
+  UpdateProfile,
   getSingleUser,
   updateUserStatus,
   getMyProfile,

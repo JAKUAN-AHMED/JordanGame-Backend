@@ -1,6 +1,7 @@
 import { Model, Types } from 'mongoose';
 import { Role } from '../../middlewares/roles';
 import { PaginateResult as IPaginationResult, PaginateOptions as IPaginationOptions } from '../../types/paginate';
+import { TUserStatus } from './user.constant';
 
 
 
@@ -12,6 +13,7 @@ export type TUser = {
   fullName: string;
   profileImage: string;
   role: Role;
+  profileStatus: TUserStatus;
   lastLoginAt: Date;
   isEmailVerified: boolean;
   lastPasswordChange: Date;

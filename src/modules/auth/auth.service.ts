@@ -43,14 +43,15 @@ const createUser = async (userData: TUser) => {
     console.log('❌ Invalid email format');
   }
 
-  console.log('userData', userData);
+  // console.log('userData', userData);
   const user = await User.create(userData);
+  const { password, ...rest } = user.toObject();
 
   //create verification email token
   const verificationToken = await TokenService.createVerifyEmailToken(user);
   //create verification email otp
   const otopDoc=await OtpService.createVerificationEmailOtp(user.email);
-  return { verificationToken,otp:otopDoc.otp };
+  return { verificationToken,otp:otopDoc.otp,userData:rest };
 };
 
 const login = async (email: string, reqpassword: string) => {
@@ -180,11 +181,22 @@ const resetPassword = async (
     throw new AppError(StatusCodes.BAD_REQUEST, 'Please verify your email first');
   }
 
-  user.password = password;
+  const hashedPassword = await bcrypt.hash(
+    password,
+    Number(config.bcrypt.saltRounds)
+  )
   user.isResetPassword = false;
-  await user.save();
+  const userData = await User.findByIdAndUpdate(
+    user._id,
+    { $set: { password: hashedPassword, isResetPassword: false } },
+    { new: true, select: '-password' }
+  );
 
-  return user;
+  if (!userData) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  return userData;
 };
 
 const changePassword = async (
@@ -211,13 +223,25 @@ const changePassword = async (
   const { password, ...userWithoutPassword } = user.toObject();
   return userWithoutPassword;
 };
-const logout = async (refreshToken: string) => {
-  console.log('hitted 1');
-  // Find and remove the refresh token from DB
-  const result = await Token.findOneAndDelete({ token: refreshToken });
+const logout = async (accessToken?: string, refreshToken?: string) => {
+  // Delete all tokens for the user to ensure complete logout
+  const deletePromises = [];
 
-  if (!result) {
-    throw new Error('Invalid refresh token or already logged out');
+  if (accessToken) {
+    deletePromises.push(Token.findOneAndDelete({ token: accessToken, type: TokenType.ACCESS }));
+  }
+
+  if (refreshToken) {
+    deletePromises.push(Token.findOneAndDelete({ token: refreshToken, type: TokenType.REFRESH }));
+  }
+
+  const results = await Promise.all(deletePromises);
+
+  // Check if at least one token was deleted
+  const hasDeleted = results.some(result => result !== null);
+
+  if (!hasDeleted) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid token or already logged out');
   }
 
   return { message: 'User logged out successfully' };
