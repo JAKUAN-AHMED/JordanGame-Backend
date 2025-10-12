@@ -1,11 +1,16 @@
+import { StatusCodes } from 'http-status-codes';
 import AppError from '../../errors/AppError';
 import { TUser } from './user.interface';
 import { User } from './user.model';
 import { Types } from 'mongoose';
 
+// import { ProfileModel } from '../profile/profile.model';
+import { isUserDeleted, NotFound, validateUserStatus } from '../../utils/utils';
 
-const createAdminOrSuperAdmin = async (payload: TUser) => {
-  const existingUser = await User.findOne({ email: payload.email });
+
+
+const createAdminOrSuperAdmin = async (email: string) => {
+  const existingUser = await User.findOne({ email });
  if(!existingUser){
     throw new AppError(404,'User not Found for this Email')
  }
@@ -25,7 +30,7 @@ const createAdminOrSuperAdmin = async (payload: TUser) => {
 
  //making admin
  await User.findOneAndUpdate({
-  email:payload.email
+  email
  },{
   $set:{
     role:"admin"
@@ -36,27 +41,58 @@ const createAdminOrSuperAdmin = async (payload: TUser) => {
  })
  
 };
-
 const getSingleUser = async (userId: string): Promise<TUser | null> => {
-  const result = await User.aggregate([
-    {
-      $match: {
-        _id: new Types.ObjectId(userId),
-      },
-    },
-    {
-      $lookup: {
-        from: 'profiles',
-        localField: '_id',
-        foreignField: 'user',
-        as: 'profile',
-      },
-    },
-    { $unwind: '$profile' },
-    { $replaceRoot: { newRoot: { $mergeObjects: ['$$ROOT', '$profile'] } } },
-    { $project: { profile: 0 } }, // removed profile field
-  ]);
-  return result[0];
+  const result = await User.findById(userId, '-password');
+  if (!result) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+  return result;
+};
+
+const updateUserStatus = async (
+  userId: string,
+  payload: { status: string }
+): Promise<any> => {
+  if (!payload.status) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Status payload is required');
+  }
+
+  // Validate status value
+  const validStatuses = ['active', 'inactive', 'block', 'delete', 'suspend', 'disabled'];
+  if (!validStatuses.includes(payload.status)) {
+    throw new AppError(StatusCodes.BAD_REQUEST, `Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  // Update user directly
+  const result = await User.findByIdAndUpdate(
+    userId,
+    { $set: { status: payload.status } },
+    { new: true, select: '-password' }
+  );
+
+  if (!result) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  return result;
+};
+
+const getMyProfile = async (userId: string): Promise<TUser | null> => {
+  const result = await User.findById(userId, '-password');
+
+  if (!result) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  return result;
+};
+const deleteMyProfile = async (userId: string): Promise<any> => {
+  const user = await User.findById(userId);
+  await NotFound(user, 'User Not Found');
+
+  const res = await User.findByIdAndDelete(userId);
+
+  return res;
 };
 
 const getAllUsers = async (query: any) => {
@@ -64,34 +100,13 @@ const getAllUsers = async (query: any) => {
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const users = await User.aggregate([
-    {
-      $lookup: {
-        from: 'profiles', // collection name
-        localField: '_id',
-        foreignField: 'user',
-        as: 'profile',
-      },
-    },
-    { $unwind: { path: '$profile', preserveNullAndEmptyArrays: true } },
-    {
-      $addFields: {
-        profile: '$profile._id', // keep profile _id separately
-        user: '$_id', // keep original user _id
-      },
-    },
-    {
-      $replaceRoot: {
-        newRoot: { $mergeObjects: ['$$ROOT', '$profile'] },
-      },
-    },
-    { $project: { _id: 0, profile: 0 } }, // remove nested profile field
-    { $sort: { createdAt: -1 } },
-    { $skip: skip },
-    { $limit: limit },
-  ]);
+  const users = await User.find({ isEmailVerified: true })
+    .select('-password')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
 
-  const total = await User.countDocuments({ 'status.isDeleted': false });
+  const total = await User.countDocuments({ isEmailVerified: true });
   const totalPage = Math.ceil(total / limit);
 
   return {
@@ -105,11 +120,44 @@ const getAllUsers = async (query: any) => {
   };
 };
 
-//overview api
+
+const recoverAccount = async (email: string) => {
+  const user = await User.isExistUserByEmail(email);
+
+  if (!user) {
+    throw new AppError(404, 'User not found with this email');
+  }
+
+  // User account is already active if email is verified
+  return user;
+};
+
+const ActivateDeactivateAccount = async (
+  userId: string,
+  isDeactivated: boolean
+) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(404, 'User not found');
+  }
+
+  return await User.findByIdAndUpdate(
+    userId,
+    { $set: { isEmailVerified: !isDeactivated } },
+    { new: true, runValidators: true, select: '-password' }
+  );
+};
+
 
 
 export const UserService = {
   createAdminOrSuperAdmin,
   getAllUsers,
   getSingleUser,
+  updateUserStatus,
+  getMyProfile,
+  deleteMyProfile,
+  recoverAccount,
+  ActivateDeactivateAccount
 };

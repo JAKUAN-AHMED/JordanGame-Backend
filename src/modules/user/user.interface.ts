@@ -1,19 +1,18 @@
 import { Model, Types } from 'mongoose';
 import { Role } from '../../middlewares/roles';
-import { PaginateOptions, PaginateResult } from '../../types/paginate';
+import { PaginateResult as IPaginationResult, PaginateOptions as IPaginationOptions } from '../../types/paginate';
 
-export type TProfileImage = {
-  imageUrl: string;
-  // file: Record<string, any>;
-};
+
 
 
 export type TUser = {
   _id: Types.ObjectId;
   email: string;
-  password?: string;
-  confirmpassword?: string;
+  password: string;
+  fullName: string;
+  profileImage: string;
   role: Role;
+  lastLoginAt: Date;
   isEmailVerified: boolean;
   lastPasswordChange: Date;
   isResetPassword: boolean;
@@ -21,25 +20,15 @@ export type TUser = {
   lockUntil: Date | undefined;
   createdAt: Date;
   updatedAt: Date;
-  profile?:Types.ObjectId | null;
- //social login fields
-  provider?: "google" | "facebook" | "local";
-  providerId?: string;
-  fname: string;
 };
-
-
-
-
 
 export interface UserModal extends Model<TUser> {
   paginate: (
     filter: object,
-    options: PaginateOptions
-  ) => Promise<PaginateResult<TUser>>;
+    options: IPaginationOptions
+  ) => Promise<IPaginationResult<TUser>>;
   isExistUserById(id: string): Promise<Partial<TUser> | null>;
-  isUserDeletedById(id:string):Promise<boolean>;
+  isUserDeletedById(id: string): Promise<boolean>;
   isExistUserByEmail(email: string): Promise<Partial<TUser> | null>;
   isMatchPassword(password: string, hashPassword: string): Promise<boolean>;
 }
-

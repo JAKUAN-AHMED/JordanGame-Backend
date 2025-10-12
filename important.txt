@@ -1,271 +1,595 @@
+# Purchase API Documentation - Complete Request & Response
 
-//MediaConvert only deals with encoding and chunk creation.
-//CloudFront only delivers the resulting HLS stream to users
+## Base URL
+```
+http://your-domain.com/api/purchase
+```
 
+---
 
+## 1. Process Purchase - Web (Stripe)
 
-import { bookmarkModel, Ibookmark, Story } from "./story.model";
-import AppError from "../../errors/AppError";
-import { User } from "../user/user.model";
-import QueryBuilder from "../../builder/QueryBuilder";
-import { v4 as uuidv4 } from 'uuid';
-import { uploadSingleFileToS3 } from "../../helpers/S3Service";
-import { createMediaConvertJob } from "./stroy.constant";
-import { config } from "../../config";
+### Endpoint
+```
+POST /api/purchase/process
+```
 
-
-export const storyServices = {
-  saveStoryDB: async (data: {
-  userId: string,
-  caption: string,
-  description: string,
-  tags: string[],
-  type: "image" | "video" | "audio",
-  files: Express.Multer.File[],
-  expiresAt: Date
-}) => {
-    const { files, type } = data;
-
-  if (!files || files.length === 0)
-    throw new Error("No files provided");
-
-  if ((type === "video" || type === "audio") && files.length > 1)
-    throw new Error("Only single video/audio is allowed");
-
-  const mediaUrls: string[] = [];
-
-  for (const file of files) {
-    if (type === "image") {
-      const url = await uploadSingleFileToS3(file, `story/${type}`);
-      mediaUrls.push(url);
+### Request Body (Stripe - Web Payment)
+```json
+{
+  "userId": "507f1f77bcf86cd799439011",
+  "productId": "small_carrot_pack",
+  "productType": "carrot_pack",
+  "productName": "Small Packs",
+  "quantity": 1,
+  "paymentMethod": "stripe",
+  "amount": 99,
+  "currency": "USD",
+  "platform": "web",
+  "stripePaymentIntentId": "pi_3AbCdEfGhIjKlMnO",
+  "stripeChargeId": "ch_3AbCdEfGhIjKlMnO",
+  "stripeCustomerId": "cus_AbCdEfGhIjKl",
+  "itemsGranted": [
+    {
+      "itemType": "carrots",
+      "amount": 25
     }
-    // } else {
-    //   // Step1: Upload raw file
-    //   const rawUrl = await uploadSingleFileToS3(file, `story/raw`);
-
-    //   // Step2: Convert to HLS
-    //   const outputFolder = `story/${type}/${uuidv4()}`;
-    //   await createMediaConvertJob(rawUrl, outputFolder);
-
-    //   // Step3: Store manifest URL
-    //   mediaUrls.push(`https://${config.aws.bucketName}.s3.${config.aws.region}.amazonaws.com/${outputFolder}/index.m3u8`);
-    // }
+  ],
+  "metadata": {
+    "userEmail": "user@example.com",
+    "userLevel": 5
   }
+}
+```
 
-  const story = await Story.create({ ...data, mediaUrl: mediaUrls });
-  return story;
-  },
-  deleteStroy: async (payload: {
-    userId: string,
-    id: string
-  }) => {
-    const { userId, id } = payload;
-    if (!await User.isExistUserById(userId)) {
-      throw new AppError(404, 'User Not Found')
-    }
-
-    await bookmarkModel.findOneAndDelete({
-      storyId: id
-    })
-    return await Story.findOneAndDelete(
-      { userId, _id: id },
-    )
-  },
-  getMyStories: async (payload: { userId: string; query: Record<string, any> }) => {
-    const { userId, query } = payload;
-
-    const queryWithLimit = { ...query, limit: 1 };
-    // check if user exists
-    const userExists = await User.isExistUserById(userId);
-    if (!userExists) {
-      throw new AppError(404, "User Not Found");
-    }
-
-    const builder = new QueryBuilder(queryWithLimit, Story as any);
-
-    const stories = await builder
-      .filter(["type"])
-      .search(["caption"])
-      .sort()
-      .paginate()
-      .execute();
-
-    const meta = await builder.countTotal();
-
-    return {
-      meta,
-      data: stories,
-    };
-  },
-  updateMyStory: async (payload: {
-    userId: string,
-    id: string,
-    data: Partial<{
-      caption: string,
-      description: string
-    }>
-  }) => {
-    const { userId, id, data } = payload;
-    return await Story.findByIdAndUpdate({
-      _id: id,
-      userId,
+### Success Response (200 OK)
+```json
+{
+  "success": true,
+  "transaction": {
+    "_id": "65f1a2b3c4d5e6f7g8h9i0j1",
+    "user": "507f1f77bcf86cd799439011",
+    "productId": "small_carrot_pack",
+    "productType": "carrot_pack",
+    "productName": "Small Packs",
+    "quantity": 1,
+    "paymentMethod": "stripe",
+    "amount": 99,
+    "currency": "USD",
+    "platform": "web",
+    "stripePaymentIntentId": "pi_3AbCdEfGhIjKlMnO",
+    "stripeChargeId": "ch_3AbCdEfGhIjKlMnO",
+    "stripeCustomerId": "cus_AbCdEfGhIjKl",
+    "status": "completed",
+    "isVerified": true,
+    "verifiedAt": "2025-09-30T10:30:00.000Z",
+    "platformFee": 33,
+    "netRevenue": 66,
+    "itemsGranted": [
+      {
+        "itemType": "carrots",
+        "amount": 25,
+        "_id": "65f1a2b3c4d5e6f7g8h9i0j2"
+      }
+    ],
+    "metadata": {
+      "userEmail": "user@example.com",
+      "userLevel": 5
     },
-      data
-      , {
-        new: true,
-        runValidators: true
-      })
+    "createdAt": "2025-09-30T10:30:00.000Z",
+    "updatedAt": "2025-09-30T10:30:00.000Z"
   },
-  getLatestStories: async () => {
-    return Story.find().sort({ createdAt: -1 }).limit(10);
+  "message": "Purchase completed successfully"
+}
+```
+
+### Error Response (400 Bad Request)
+```json
+{
+  "success": false,
+  "message": "Payment verification failed",
+  "error": "Invalid payment or receipt"
+}
+```
+
+---
+
+## 2. Process Purchase - iOS (Apple IAP)
+
+### Endpoint
+```
+POST /api/purchase/process
+```
+
+### Request Body (Apple In-App Purchase)
+```json
+{
+  "userId": "507f1f77bcf86cd799439011",
+  "productId": "golden_rabbit",
+  "productType": "rabbit_skin",
+  "productName": "Golden Rabbit",
+  "quantity": 1,
+  "paymentMethod": "apple_iap",
+  "amount": 100,
+  "currency": "USD",
+  "platform": "ios",
+  "appleTransactionId": "1000000012345678",
+  "appleOriginalTransactionId": "1000000012345678",
+  "appleReceiptData": "ewoJInNpZ25hdHVyZSI6ICJBcHBsZVB1cmNoYXNlU2lnbmF0dXJlIiwKCSJwdXJjaGFzZS1pbmZvIjogImJhc2U2NCBlbmNvZGVkIGRhdGEiCn0=",
+  "appleBundleId": "com.yourapp.rabbits",
+  "appleProductId": "com.yourapp.golden_rabbit",
+  "itemsGranted": [
+    {
+      "itemType": "rabbit_skin",
+      "itemId": "golden_rabbit",
+      "amount": 1
+    }
+  ]
+}
+```
+
+### Success Response (200 OK)
+```json
+{
+  "success": true,
+  "transaction": {
+    "_id": "65f1a2b3c4d5e6f7g8h9i0j3",
+    "user": "507f1f77bcf86cd799439011",
+    "productId": "golden_rabbit",
+    "productType": "rabbit_skin",
+    "productName": "Golden Rabbit",
+    "quantity": 1,
+    "paymentMethod": "apple_iap",
+    "amount": 100,
+    "currency": "USD",
+    "platform": "ios",
+    "appleTransactionId": "1000000012345678",
+    "appleOriginalTransactionId": "1000000012345678",
+    "appleBundleId": "com.yourapp.rabbits",
+    "appleProductId": "com.yourapp.golden_rabbit",
+    "status": "completed",
+    "isVerified": true,
+    "verifiedAt": "2025-09-30T10:35:00.000Z",
+    "platformFee": 30,
+    "netRevenue": 70,
+    "itemsGranted": [
+      {
+        "itemType": "rabbit_skin",
+        "itemId": "golden_rabbit",
+        "amount": 1,
+        "_id": "65f1a2b3c4d5e6f7g8h9i0j4"
+      }
+    ],
+    "verificationResponse": {
+      "status": 0,
+      "receipt": {
+        "bundle_id": "com.yourapp.rabbits",
+        "application_version": "1.0",
+        "in_app": [
+          {
+            "quantity": "1",
+            "product_id": "com.yourapp.golden_rabbit",
+            "transaction_id": "1000000012345678",
+            "purchase_date": "2025-09-30 10:35:00 Etc/GMT"
+          }
+        ]
+      }
+    },
+    "createdAt": "2025-09-30T10:35:00.000Z",
+    "updatedAt": "2025-09-30T10:35:00.000Z"
   },
-  libraryData: async (query: Record<string, any>) => {
-    const types: ("audio" | "video" | "image")[] = ["audio", "video", "image"];
+  "message": "Purchase completed successfully"
+}
+```
 
-    const data: Record<string, any> = {};
+### Error Response (400 Bad Request)
+```json
+{
+  "success": false,
+  "message": "Payment verification failed",
+  "error": "Invalid receipt data or receipt already used"
+}
+```
 
-    for (const type of types) {
-      // extract pagination info for this type
-      const { page = 1, limit = 10, ...restQuery } = query[type] || {};
+---
 
-      const typeQuery = { ...restQuery, type, page, limit };
+## 3. Process Purchase - Android (Google Play)
 
-      const builder = new QueryBuilder(typeQuery, Story as any);
+### Endpoint
+```
+POST /api/purchase/process
+```
 
-      const results = await builder
-        .filter(["type"])
-        .search(["caption"])
-        .sort()
-        .paginate()
-        .execute();
-
-      const meta = await builder.countTotal();
-
-      data[type] = {
-        meta,
-        results,
-      };
+### Request Body (Google Play In-App Purchase)
+```json
+{
+  "userId": "507f1f77bcf86cd799439011",
+  "productId": "big_carrot_pack",
+  "productType": "carrot_pack",
+  "productName": "Big Packs",
+  "quantity": 1,
+  "paymentMethod": "google_iap",
+  "amount": 499,
+  "currency": "USD",
+  "platform": "android",
+  "googleOrderId": "GPA.1234-5678-9012-34567",
+  "googlePackageName": "com.yourapp.rabbits",
+  "googleProductId": "big_carrot_pack",
+  "googlePurchaseToken": "abcdefghijklmnopqrstuvwxyz123456789",
+  "googlePurchaseState": 0,
+  "itemsGranted": [
+    {
+      "itemType": "carrots",
+      "amount": 150
     }
+  ]
+}
+```
 
-    return { data };
+### Success Response (200 OK)
+```json
+{
+  "success": true,
+  "transaction": {
+    "_id": "65f1a2b3c4d5e6f7g8h9i0j5",
+    "user": "507f1f77bcf86cd799439011",
+    "productId": "big_carrot_pack",
+    "productType": "carrot_pack",
+    "productName": "Big Packs",
+    "quantity": 1,
+    "paymentMethod": "google_iap",
+    "amount": 499,
+    "currency": "USD",
+    "platform": "android",
+    "googleOrderId": "GPA.1234-5678-9012-34567",
+    "googlePackageName": "com.yourapp.rabbits",
+    "googleProductId": "big_carrot_pack",
+    "googlePurchaseToken": "abcdefghijklmnopqrstuvwxyz123456789",
+    "googlePurchaseState": 0,
+    "status": "completed",
+    "isVerified": true,
+    "verifiedAt": "2025-09-30T10:40:00.000Z",
+    "platformFee": 150,
+    "netRevenue": 349,
+    "itemsGranted": [
+      {
+        "itemType": "carrots",
+        "amount": 150,
+        "_id": "65f1a2b3c4d5e6f7g8h9i0j6"
+      }
+    ],
+    "verificationResponse": {
+      "kind": "androidpublisher#productPurchase",
+      "purchaseTimeMillis": "1727692800000",
+      "purchaseState": 0,
+      "consumptionState": 0,
+      "orderId": "GPA.1234-5678-9012-34567"
+    },
+    "createdAt": "2025-09-30T10:40:00.000Z",
+    "updatedAt": "2025-09-30T10:40:00.000Z"
   },
+  "message": "Purchase completed successfully"
+}
+```
 
+### Error Response (400 Bad Request)
+```json
+{
+  "success": false,
+  "message": "Payment verification failed",
+  "error": "Purchase token is invalid or already consumed"
+}
+```
 
-  //bookmark related services
-  bookmarkStory: async (payload: Ibookmark) => {
-    const { userId, storyId } = payload;
-    if (!userId || !storyId) {
-      throw new AppError(404, 'Required field missing')
+---
+
+## 4. Get Purchase History
+
+### Endpoint
+```
+GET /api/purchase/history/:userId?limit=20
+```
+
+### Request Parameters
+- **Path Parameter**: `userId` (required) - The user's ID
+- **Query Parameter**: `limit` (optional) - Number of transactions to return (default: 20)
+
+### Request Example
+```
+GET /api/purchase/history/507f1f77bcf86cd799439011?limit=10
+```
+
+### Success Response (200 OK)
+```json
+{
+  "success": true,
+  "purchases": [
+    {
+      "_id": "65f1a2b3c4d5e6f7g8h9i0j5",
+      "user": "507f1f77bcf86cd799439011",
+      "productId": "big_carrot_pack",
+      "productType": "carrot_pack",
+      "productName": "Big Packs",
+      "quantity": 1,
+      "paymentMethod": "google_iap",
+      "amount": 499,
+      "currency": "USD",
+      "platform": "android",
+      "status": "completed",
+      "isVerified": true,
+      "platformFee": 150,
+      "netRevenue": 349,
+      "itemsGranted": [
+        {
+          "itemType": "carrots",
+          "amount": 150,
+          "_id": "65f1a2b3c4d5e6f7g8h9i0j6"
+        }
+      ],
+      "createdAt": "2025-09-30T10:40:00.000Z",
+      "updatedAt": "2025-09-30T10:40:00.000Z"
+    },
+    {
+      "_id": "65f1a2b3c4d5e6f7g8h9i0j3",
+      "user": "507f1f77bcf86cd799439011",
+      "productId": "golden_rabbit",
+      "productType": "rabbit_skin",
+      "productName": "Golden Rabbit",
+      "quantity": 1,
+      "paymentMethod": "apple_iap",
+      "amount": 100,
+      "currency": "USD",
+      "platform": "ios",
+      "status": "completed",
+      "isVerified": true,
+      "platformFee": 30,
+      "netRevenue": 70,
+      "itemsGranted": [
+        {
+          "itemType": "rabbit_skin",
+          "itemId": "golden_rabbit",
+          "amount": 1,
+          "_id": "65f1a2b3c4d5e6f7g8h9i0j4"
+        }
+      ],
+      "createdAt": "2025-09-30T10:35:00.000Z",
+      "updatedAt": "2025-09-30T10:35:00.000Z"
+    },
+    {
+      "_id": "65f1a2b3c4d5e6f7g8h9i0j1",
+      "user": "507f1f77bcf86cd799439011",
+      "productId": "small_carrot_pack",
+      "productType": "carrot_pack",
+      "productName": "Small Packs",
+      "quantity": 1,
+      "paymentMethod": "stripe",
+      "amount": 99,
+      "currency": "USD",
+      "platform": "web",
+      "status": "completed",
+      "isVerified": true,
+      "platformFee": 33,
+      "netRevenue": 66,
+      "itemsGranted": [
+        {
+          "itemType": "carrots",
+          "amount": 25,
+          "_id": "65f1a2b3c4d5e6f7g8h9i0j2"
+        }
+      ],
+      "createdAt": "2025-09-30T10:30:00.000Z",
+      "updatedAt": "2025-09-30T10:30:00.000Z"
     }
-    const isStoryExist = await Story.isStoryExistByUserId(storyId as any, userId as any);
-    if (!isStoryExist) {
-      throw new AppError(404, 'For this Id Story Doesnt Exist');
-    }
+  ]
+}
+```
 
-    const isBookMarkExist = await bookmarkModel.isBookMarkExistUserId(storyId as any, userId as any);
-    if (isBookMarkExist) {
-      throw new AppError(404, 'For this UserId and StoryId Already Exist');
-    }
-    return await bookmarkModel.create(payload);
-  },
-  getAllMyBookmark: async (userId: string, query: any) => {
-    const builder = new QueryBuilder(query, bookmarkModel as any);
-    const bookmarks = await builder
-      .filter(["userId"])
-      .include([
-        { path: 'userId' },
-        { path: 'storyId' },
-      ])
-      .paginate()
-      .execute();
+### Error Response (500 Internal Server Error)
+```json
+{
+  "success": false,
+  "message": "Failed to fetch purchase history",
+  "error": "Database connection error"
+}
+```
 
-    const meta = await builder.countTotal();
+---
 
-    return {
-      meta,
-      data: bookmarks
-    }
-  },
-  getSingleMyBookmark: async (payload: {
-    userId: string, bookmarkId: string
-  }) => {
+## 5. Process Refund (Admin Only)
 
-    const { userId, bookmarkId } = payload;
-    return await bookmarkModel.findOne({
-      _id: bookmarkId,
-      userId
-    })
-      .populate('userId')
-      .populate('storyId')
-  },
-  deleteBookmark: async (payload: {
-    userId: string, bookmarkId: string
-  }) => {
-    const { userId, bookmarkId } = payload;
-    const isStoryExist = await Story.findById(bookmarkId);
-    if (!isStoryExist) {
-      throw new AppError(404, 'Already Deleted');
-    }
-    return await bookmarkModel.findOneAndDelete({
-      _id: bookmarkId,
-      userId
-    })
+### Endpoint
+```
+POST /api/purchase/refund/:transactionId
+```
+
+### Request Parameters
+- **Path Parameter**: `transactionId` (required) - The transaction ID to refund
+
+### Request Example
+```
+POST /api/purchase/refund/65f1a2b3c4d5e6f7g8h9i0j1
+```
+
+### Request Body
+```json
+{
+  "reason": "Customer requested refund",
+  "adminId": "admin_user_id_here"
+}
+```
+
+### Success Response (200 OK)
+```json
+{
+  "success": true,
+  "message": "Refund processed successfully",
+  "transaction": {
+    "_id": "65f1a2b3c4d5e6f7g8h9i0j1",
+    "user": "507f1f77bcf86cd799439011",
+    "productId": "small_carrot_pack",
+    "productType": "carrot_pack",
+    "productName": "Small Packs",
+    "quantity": 1,
+    "paymentMethod": "stripe",
+    "amount": 99,
+    "currency": "USD",
+    "platform": "web",
+    "stripePaymentIntentId": "pi_3AbCdEfGhIjKlMnO",
+    "status": "refunded",
+    "isVerified": true,
+    "verifiedAt": "2025-09-30T10:30:00.000Z",
+    "platformFee": 33,
+    "netRevenue": 66,
+    "itemsGranted": [
+      {
+        "itemType": "carrots",
+        "amount": 25,
+        "_id": "65f1a2b3c4d5e6f7g8h9i0j2"
+      }
+    ],
+    "createdAt": "2025-09-30T10:30:00.000Z",
+    "updatedAt": "2025-09-30T11:15:00.000Z"
   }
+}
+```
 
+### Error Response (404 Not Found)
+```json
+{
+  "success": false,
+  "message": "Failed to process refund",
+  "error": "Transaction not found"
+}
+```
 
-};
+### Error Response (500 Internal Server Error)
+```json
+{
+  "success": false,
+  "message": "Failed to process refund",
+  "error": "Insufficient user balance for refund"
+}
+```
 
+---
 
-2️⃣ CloudFront
+## Error Status Codes Summary
 
-Where it’s used: As a Content Delivery Network (CDN) in front of your S3 output bucket.
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Request completed successfully |
+| 400 | Bad Request - Missing required fields or validation error |
+| 404 | Not Found - Resource doesn't exist |
+| 500 | Internal Server Error - Server-side error |
 
-Purpose: Serves HLS chunks and manifest files to users fast and globally.
+---
 
-Benefits:
+## Common Error Responses
 
-Low latency: Users around the world can stream chunks quickly.
+### Missing Required Fields (400)
+```json
+{
+  "success": false,
+  "message": "Missing required fields"
+}
+```
 
-Reduces load on S3 bucket.
+### Invalid Payment Method (400)
+```json
+{
+  "success": false,
+  "message": "Invalid payment method. Must be one of: stripe, apple_iap, google_iap"
+}
+```
 
-Provides HTTPS URLs for secure streaming.
+### User Not Found (404)
+```json
+{
+  "success": false,
+  "message": "User not found"
+}
+```
 
-Supports caching, which improves performance.
+### Internal Server Error (500)
+```json
+{
+  "success": false,
+  "message": "Internal server error",
+  "error": "Detailed error message here"
+}
+```
 
-✅ Key point:
+---
 
-MediaConvert only deals with encoding and chunk creation.
+## Additional Purchase Examples
 
-CloudFront only delivers the resulting HLS stream to users.
+### 6. Purchase Multiple Rabbit Skins
 
-If you want, I can update your Node.js story upload service to automatically:
+```json
+{
+  "userId": "507f1f77bcf86cd799439011",
+  "productId": "rainbow_rabbit",
+  "productType": "rabbit_skin",
+  "productName": "Rainbow Rabbit",
+  "quantity": 1,
+  "paymentMethod": "stripe",
+  "amount": 150,
+  "currency": "USD",
+  "platform": "web",
+  "stripePaymentIntentId": "pi_3XyZaBcDeFgHiJkL",
+  "itemsGranted": [
+    {
+      "itemType": "rabbit_skin",
+      "itemId": "rainbow_rabbit",
+      "amount": 1
+    }
+  ]
+}
+```
 
-Upload video/audio to S3
+### 7. Purchase with Promotional/Free
 
-Trigger MediaConvert job with your role
+```json
+{
+  "userId": "507f1f77bcf86cd799439011",
+  "productId": "starter_pack",
+  "productType": "carrot_pack",
+  "productName": "Free Starter Pack",
+  "quantity": 1,
+  "paymentMethod": "promotional",
+  "amount": 0,
+  "currency": "USD",
+  "platform": "web",
+  "itemsGranted": [
+    {
+      "itemType": "carrots",
+      "amount": 10
+    }
+  ],
+  "metadata": {
+    "promotionCode": "WELCOME2025",
+    "promotionType": "new_user_bonus"
+  }
+}
+```
 
-Return the CloudFront URL for frontend streaming
+---
 
+## Notes for App Developers
 
-//CloudFront
+1. **Amount Format**: Always send amount in smallest currency unit (cents for USD)
+   - $0.99 = 99
+   - $4.99 = 499
+   - $1.50 = 150
 
-1️⃣ Setup CloudFront
+2. **Receipt Data**: For Apple IAP, send base64 encoded receipt data
 
-Go to AWS CloudFront → Create Distribution → Web.
+3. **Purchase Token**: For Google Play, ensure purchase token is valid and not consumed
 
-Origin Domain: Your S3 bucket where MediaConvert outputs the HLS chunks (index.m3u8 + .ts files).
+4. **Platform Fees**: Backend automatically calculates:
+   - Stripe: 2.9% + $0.30
+   - Apple/Google: 30% (or 15% for small business program)
 
-Default Behavior: Leave default.
+5. **Transaction IDs**: Must be unique per platform to prevent duplicate purchases
 
-Cache Policy: Standard or customize for streaming.
-
-Enable HTTPS.
-
-Finish creation. You’ll get a CloudFront domain, e.g.:
-
-
-
-//AWS IAM
-
-
-//story viewer restriction not implemented
+6. **Verification**: All purchases are verified with respective platforms before granting items

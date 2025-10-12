@@ -1,4 +1,4 @@
-export type Role = 'superadmin' | 'admin' | 'user';
+export type Role = 'admin' | 'user';
 
 export type TUserStatus = 'active' | 'delete' | 'block';
 
@@ -37,5 +37,10 @@ export const MaritalStatus: IMaritalStatus[] = [
   'other',
 ];
 
+export type TCurrentStatus = 'active' | 'inactive' | 'away';
 
-export const USER_UPLOADS_FOLDER = 'demoUpload/p3/users';
+export const UserCurrentStatus: TCurrentStatus[] = ['active', 'inactive', 'away'];
+
+export type TProfileVisibility = 'public' | 'private' | 'friends';
+
+export const UserVisibility: TProfileVisibility[] = ['public', 'private', 'friends'];

@@ -10,10 +10,34 @@ export const NotFound=async(user:TUser | any,msg:string)=>{
   }
 }
 
+export const AlreadyExist = async (item: any) => {
+  if (item) {
+    throw new AppError(StatusCodes.CONFLICT, 'This item already exists');
+  }
+};
 
+export const isUserDeleted = async (profile: any) => {
+  if (profile && profile.status === 'delete') {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'This profile has been deleted');
+  }
+};
+
+export const validateUserStatus = async (profile: any) => {
+  if (!profile) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Profile not found');
+  }
+
+  const invalidStatuses = ['delete', 'block', 'suspend', 'disabled'];
+  if (invalidStatuses.includes(profile.status)) {
+    throw new AppError(
+      StatusCodes.FORBIDDEN,
+      `Account is ${profile.status}. Please contact support.`
+    );
+  }
+};
 
 export const generate4DigitFromUUID=async() =>{
-  return uuidv4().replace(/\D/g, "").substring(0, 4); 
+  return uuidv4().replace(/\D/g, "").substring(0, 4);
 }
 
 

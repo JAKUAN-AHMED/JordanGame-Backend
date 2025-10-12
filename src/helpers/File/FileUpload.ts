@@ -1,7 +1,6 @@
 import fs from "fs";
 import multer from "multer";
 import path from "path";
-import { fileFilter } from "./FileFilter";
 
 export const createStorage = () => {
   return multer.diskStorage({

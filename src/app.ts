@@ -8,8 +8,6 @@ import router from './routes';
 import { Morgan } from './shared/morgen';
 import i18next from './i18n/i18n'; // Import the i18next configuration
 import i18nextMiddleware from 'i18next-express-middleware';
-import passport from './config/passport';
-// import session from "express-session";
 
 const app = express();
 
@@ -18,29 +16,20 @@ app.use(Morgan.successHandler);
 app.use(Morgan.errorHandler);
 
 export const corsOptions = {
-  origin: ['http://localhost:5173','http://10.10.7.68:3007','https://10.10.7.68:3007'],
+  origin: ['http://localhost:3000','http://localhost:7000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
-
-// export const corsOptions = {
-//   origin: ['*'], 
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-//   credentials: true, 
-// };
 
 //middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Use cookie-parser to parse cookies
+// Use cookie-parser to parse cookies   
 app.use(cookieParser());
 
-// file retrieve
-app.use('/uploads', express.static(path.join(__dirname, '../uploads/')));
 
 // Use i18next middleware
 app.use(i18nextMiddleware.handle(i18next));
@@ -48,17 +37,12 @@ app.use(i18nextMiddleware.handle(i18next));
 // router
 app.use('/api/v1', router);
 
-// Middleware`
-// app.use(session({ secret: "secret-key", resave: false, saveUninitialized: false }));
-app.use(passport.initialize());
-// app.use(passport.session());
-
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-app.use('/demoUpload', express.static(path.join(process.cwd(), 'demoUpload')));
+// app.use("/uploads", express.static(path.join(process.cwd(), "/uploads")));
+app.use("/demoFolder", express.static(path.join(process.cwd(), "/demoFolder")));
 
 // live response
 app.get('/test', (req: Request, res: Response) => {
-  res.status(201).json({ message: 'Welcome' });
+  res.status(201).json({ message: req.t('welcome') });
 });
 
 app.get('/test/:lang', (req: Request, res: Response) => {
@@ -70,7 +54,7 @@ app.get('/test/:lang', (req: Request, res: Response) => {
   console.log(`Current language: ${i18next.language}`); // Log the current language
 
   // Send the translated response
-  res.status(200).json({ message: 'Welcome' }); // Get translated 'welcome' message
+  res.status(200).json({ message: req.t('welcome') }); // Get translated 'welcome' message
 });
 
 // global error handle

@@ -3,12 +3,17 @@ import catchAsync from '../../shared/catchAsync';
 import sendResponse from '../../shared/sendResponse';
 import { AuthService } from './auth.service';
 import AppError from '../../errors/AppError';
-import { TokenService } from '../token/token.service';
-import { TUser } from '../user/user.interface';
+import { uploadSingleFileToS3 } from '../../helpers/S3Service';
+import { Uploads_USER_FOLDER } from './auth.constant';
 
 // register
 const register = catchAsync(async (req, res) => {
-  const result = await AuthService.createUser(req.body);
+  let imgUrl:string|null = null;
+  if(req.file){
+    imgUrl = await uploadSingleFileToS3(req.file,Uploads_USER_FOLDER);
+  }
+  req.body.profileImage = imgUrl;
+  const result = await AuthService.createUser(req.body,);
   sendResponse(res, {
     code: StatusCodes.CREATED,
     message: 'User created successfully, please verify your email',
@@ -65,10 +70,10 @@ const forgotPassword = catchAsync(async (req, res) => {
 });
 
 const changePassword = catchAsync(async (req, res) => {
-  if (!req.User || typeof (req.User as any).userId === 'undefined') {
-    throw new AppError(StatusCodes.UNAUTHORIZED, 'User not authenticated');
+  const userId = (req.user as any)?.userId;
+  if (!userId) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'You are unauthenticated.');
   }
-  const { userId } = req.User as { userId: string };
   const { currentPassword, newPassword } = req.body;
   const result = await AuthService.changePassword(
     userId,
@@ -82,10 +87,8 @@ const changePassword = catchAsync(async (req, res) => {
   });
 });
 const resetPassword = catchAsync(async (req, res) => {
-
-  req.body.email=req.User.email;
-  const {password, confirmpassword ,email} = req.body;
-  const result = await AuthService.resetPassword(email,password,confirmpassword);
+  const { email, password, confirmpassword } = req.body;
+  const result = await AuthService.resetPassword(email, password, confirmpassword);
   sendResponse(res, {
     code: StatusCodes.OK,
     message: 'Password reset successfully',
@@ -100,7 +103,6 @@ const logout = catchAsync(async (req, res) => {
     throw new AppError(404,'Token Not Found');
   }
   await AuthService.logout(req.body.refreshToken);
-  console.log('hitted 2');
   sendResponse(res, {
     code: StatusCodes.OK,
     message: 'User logged out successfully',
@@ -123,31 +125,6 @@ const refreshToken = catchAsync(async (req, res) => {
   });
 });
 
-
-//SOCIAL
-
-const googleCallback = catchAsync(async (req, res) => {
-  const user = req.user;
-  // console.log("user",user);
-  const tokens = await TokenService.accessAndRefreshToken(user as TUser);
-
-  sendResponse(res,{
-    message:`Welcome Home`,
-    code:200,
-    data:{user,tokens}
-  })
-});
-
-const facebookCallback =catchAsync (async (req, res) => {
-  const user = req.user;
-  const tokens = await TokenService.accessAndRefreshToken(user as TUser);
-
-  sendResponse(res,{
-    message:`Welcome Home`,
-    code:200,
-    data:{user,tokens}
-  })
-});
 export const AuthController = {
   register,
   login,
@@ -158,6 +135,4 @@ export const AuthController = {
   refreshToken,
   forgotPassword,
   resetPassword,
-  googleCallback,
-  facebookCallback
 };

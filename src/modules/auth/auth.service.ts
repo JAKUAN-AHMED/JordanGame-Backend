@@ -12,24 +12,13 @@ import { OtpType } from '../otp/otp.interface';
 
 import { Token } from '../token/token.model';
 import validator from 'validator';
+// import { ProfileModel } from '../profile/profile.model';
+
 
 const createUser = async (userData: TUser) => {
   const existingUser = await User.findOne({ email: userData.email });
-  
-  if (userData.password !== userData.confirmpassword) {
-    throw new AppError(
-      StatusCodes.BAD_REQUEST,
-      'Password and Confirm Password do not match'
-    );
-  }
 
 
-  userData.password = await bcrypt.hash(
-    userData.password as string,
-    10 as number
-  );
-
-  
   if (existingUser) {
     if (existingUser.isEmailVerified) {
       throw new AppError(StatusCodes.BAD_REQUEST, 'Email already taken');
@@ -41,8 +30,8 @@ const createUser = async (userData: TUser) => {
         existingUser
       );
       //create verification email otp
-      const otp=await OtpService.createVerificationEmailOtp(existingUser.email);
-      return { verificationToken,otp:otp.otp };
+     const otpDoc= await OtpService.createVerificationEmailOtp(existingUser.email);
+      return { verificationToken,otp:otpDoc.otp };
     }
   }
 
@@ -54,16 +43,14 @@ const createUser = async (userData: TUser) => {
     console.log('❌ Invalid email format');
   }
 
-  // const user=userData;
-  // console.log('user rug',user)
-
   console.log('userData', userData);
   const user = await User.create(userData);
+
   //create verification email token
   const verificationToken = await TokenService.createVerifyEmailToken(user);
   //create verification email otp
-  const otpDoc=await OtpService.createVerificationEmailOtp(user.email);
-  return { verificationToken,otp:otpDoc.otp };
+  const otopDoc=await OtpService.createVerificationEmailOtp(user.email);
+  return { verificationToken,otp:otopDoc.otp };
 };
 
 const login = async (email: string, reqpassword: string) => {
@@ -151,10 +138,10 @@ const forgotPassword = async (email: string) => {
   }
   //create reset password token
   const resetPasswordToken = await TokenService.createResetPasswordToken(user);
- await OtpService.createResetPasswordOtp(user.email);
+ const otopDoc=await OtpService.createResetPasswordOtp(user.email);
   user.isResetPassword = true;
   await user.save();
-  return { resetPasswordToken};
+  return { resetPasswordToken,otp:otopDoc.otp };
 };
 
 const resendOtp = async (email: string) => {
@@ -180,23 +167,24 @@ const resetPassword = async (
   password: string,
   confirmpassword: string
 ) => {
-
-  if(password!=confirmpassword)
-  {
-    throw new AppError(403,'Password and confirm pass not matched');
+  if(password != confirmpassword) {
+    throw new AppError(403, 'Password and confirm pass not matched');
   }
 
-  const pass=await bcrypt.hash(password,10 as number);
   const user = await User.findOne({ email });
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
-  user.password = pass;
+
+  if (!user.isEmailVerified) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Please verify your email first');
+  }
+
+  user.password = password;
   user.isResetPassword = false;
   await user.save();
 
-  const { password:newPassword, ...userWithoutPassword } = user.toObject();
-  return userWithoutPassword;
+  return user;
 };
 
 const changePassword = async (
@@ -218,7 +206,7 @@ const changePassword = async (
     throw new AppError(StatusCodes.UNAUTHORIZED, 'Password is incorrect');
   }
 
-  user.password = await bcrypt.hash(newPassword, 10 as number);
+  user.password = newPassword;
   await user.save();
   const { password, ...userWithoutPassword } = user.toObject();
   return userWithoutPassword;

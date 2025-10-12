@@ -1,51 +1,42 @@
-import { SetUpProfileController } from './../profile/profile.controller';
 import express from 'express';
 import { UserController } from './user.controller';
 import auth from '../../middlewares/auth';
+import validateRequest from '../../shared/validateRequest';
+import { UserValidation } from './user.validation';
 
-import fileUploadHandler from '../../shared/fileUploadHandler';
-import { USER_UPLOADS_FOLDER } from './user.constant';
-
-
-const upload=fileUploadHandler(USER_UPLOADS_FOLDER);
 
 
 const router = express.Router();
 
-
 //main routes
-router.route('/all-user').get(auth('admin'), UserController.getAllUsers);
+router.route('/all-user').get(auth('common'), UserController.getAllUsers);
 
 router
   .route('/single-user/:userId')
   .get(auth('common'), UserController.getSingleUser)
+  .patch(
+    auth('admin'),
+    validateRequest(UserValidation.changeUserStatusValidationSchema),
+    UserController.updateUserStatus
+  );
+
+router
+  .route('/profile')
+  .patch(auth('common'), UserController.ActivateDeactivateAccount) // PATCH /profile
+  .delete(auth('common'), UserController.deleteMyProfile) // DELETE /profile
+  .get(auth('common'), UserController.getMyProfile); // GET /profile
 
 
 
-// Upload profile (with file)
-router.post(
-  '/profile/create',
-  auth('common'),
-  upload.single("file"),
-  SetUpProfileController.SetUpProfile
-);
 
 
-//[profile]
-router.route('/profile')
-  .get(auth('common'), SetUpProfileController.myProfile)
-  .patch(auth('common'),
-    upload.single('file'),
-    SetUpProfileController.updateProfile
-  )
-  .delete(auth('common'),SetUpProfileController.deleteProfile)
-
-
+//recover account
+router.patch('/profile/recover', auth('admin'), UserController.recoverAccount);
 
 //make admin
-router.patch(
-  '/admin',
-  auth('superadmin'),
+router.post(
+  '/admin', 
+  auth('admin'),
   UserController.createAdminOrSuperAdmin
 );
 

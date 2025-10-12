@@ -188,6 +188,102 @@ export const paymentSuccessTemplate = (
   </div>
 `;
 
+const sendPaymentInvoiceEmail = async (
+  to: string,
+  userName: string,
+  transactionId: string,
+  planName: string,
+  amount: number,
+  discountApplied: boolean,
+  discountAmount: number = 0,
+  paymentDate: Date
+) => {
+  const subject = 'Payment Invoice - Lomi Dating App';
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(paymentDate);
+
+  const html = `
+    <div style="width: 600px; margin: 0 auto; font-family: Arial, sans-serif; padding: 20px; color: #333; border: 1px solid #e0e0e0; border-radius: 10px; background: #ffffff;">
+      <div style="text-align: center; border-bottom: 2px solid #1B9AAA; padding-bottom: 20px; margin-bottom: 30px;">
+        <img src="https://raw.githubusercontent.com/rakibislam2233/Image-Server/refs/heads/main/mentor-services.png" alt="Lomi Logo" style="width: 180px; margin-bottom: 15px;" />
+        <h1 style="color: #1B9AAA; margin: 10px 0;">Payment Invoice</h1>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+        <h2 style="color: #333; margin-top: 0; font-size: 20px;">Hello ${userName},</h2>
+        <p style="font-size: 16px; line-height: 1.6; margin: 10px 0;">
+          Thank you for your payment! This email serves as your official invoice for the subscription purchase.
+        </p>
+      </div>
+
+      <div style="background: #fff; padding: 25px; border: 1px solid #e9ecef; border-radius: 8px; margin-bottom: 25px;">
+        <h3 style="color: #1B9AAA; margin-top: 0; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">Invoice Details</h3>
+
+        <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+          <tr style="height: 40px;">
+            <td style="font-weight: bold; color: #666; padding: 8px 0;">Transaction ID:</td>
+            <td style="color: #333; text-align: right; padding: 8px 0;">${transactionId}</td>
+          </tr>
+          <tr style="height: 40px; background: #f8f9fa;">
+            <td style="font-weight: bold; color: #666; padding: 8px 10px;">Payment Date:</td>
+            <td style="color: #333; text-align: right; padding: 8px 10px;">${formattedDate}</td>
+          </tr>
+          <tr style="height: 40px;">
+            <td style="font-weight: bold; color: #666; padding: 8px 0;">Plan Name:</td>
+            <td style="color: #333; text-align: right; padding: 8px 0;">${planName}</td>
+          </tr>
+          ${discountApplied ? `
+          <tr style="height: 40px; background: #f8f9fa;">
+            <td style="font-weight: bold; color: #666; padding: 8px 10px;">Original Price:</td>
+            <td style="color: #999; text-align: right; padding: 8px 10px; text-decoration: line-through;">$${(amount + discountAmount).toFixed(2)}</td>
+          </tr>
+          <tr style="height: 40px;">
+            <td style="font-weight: bold; color: #666; padding: 8px 0;">Discount Applied:</td>
+            <td style="color: #4CAF50; text-align: right; padding: 8px 0;">-$${discountAmount.toFixed(2)}</td>
+          </tr>
+          ` : ''}
+          <tr style="height: 50px; border-top: 2px solid #1B9AAA; margin-top: 10px;">
+            <td style="font-weight: bold; color: #1B9AAA; font-size: 18px; padding: 15px 0;">Total Amount Paid:</td>
+            <td style="color: #1B9AAA; text-align: right; font-size: 20px; font-weight: bold; padding: 15px 0;">$${amount.toFixed(2)}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+        <p style="margin: 0; font-size: 16px; color: #2e7d32;">
+          <strong>Payment Status:</strong> <span style="background: #4CAF50; color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; margin-left: 10px;">SUCCESSFUL</span>
+        </p>
+      </div>
+
+      <div style="text-align: center; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+        <p style="font-size: 14px; color: #666; margin: 10px 0;">
+          This is an auto-generated invoice. Please keep it for your records.
+        </p>
+        <p style="font-size: 14px; color: #666; margin: 10px 0;">
+          If you have any questions about this payment, please contact our support team.
+        </p>
+        <a href="mailto:support@lomidatingapp.com" style="display: inline-block; margin-top: 15px; padding: 10px 30px; background: #1B9AAA; color: white; text-decoration: none; border-radius: 25px; font-weight: bold;">Contact Support</a>
+      </div>
+
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center;">
+        <p style="font-size: 12px; color: #999;">
+          © ${new Date().getFullYear()} Lomi Dating App. All rights reserved.
+        </p>
+        <p style="font-size: 12px; color: #999; margin-top: 5px;">
+          This email was sent to ${to}
+        </p>
+      </div>
+    </div>
+  `;
+
+  await sendEmail({ to, subject, html });
+};
+
 export {
   sendEmail,
   sendVerificationEmail,
@@ -195,4 +291,5 @@ export {
   sendAdminOrSuperAdminCreationEmail,
   sendSupportMessageEmail,
   sendWelcomeEmail,
+  sendPaymentInvoiceEmail,
 };

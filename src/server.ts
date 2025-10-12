@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { Server } from 'socket.io';
 import app from './app';
 import { errorLogger, logger } from './shared/logger';
-import { socketHelper } from './helpers/socket';
+// import { socketHelper } from './helpers/socket';
 import { config } from './config';
 
 //uncaught exception
@@ -19,17 +19,10 @@ async function main() {
     logger.info(colors.green('🚀 Database connected successfully'));
     const port =
       typeof config.port === 'number' ? config.port : Number(config.port);
-    // server = app.listen(port, config.backend.ip as string, () => {
-    //   logger.info(
-    //     colors.yellow(
-    //       `♻️  Application listening on port ${config.backend.baseUrl}/test`,
-    //     ),
-    //   );
-    // });
-    server = app.listen(port,() => {
+    server = app.listen(port, () => {
       logger.info(
         colors.yellow(
-          `♻️  Application listening on port ${port}`,
+          `♻️  Application listening on port ${config.backend.baseUrl}/test`,
         ),
       );
     });
@@ -40,7 +33,7 @@ async function main() {
         origin: '*',
       },
     });
-    socketHelper.socket(io);
+    // socketHelper.socket(io);
     // @ts-ignore
     global.io = io;
   } catch (error) {

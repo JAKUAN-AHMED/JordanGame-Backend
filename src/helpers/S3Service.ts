@@ -18,19 +18,19 @@ const execPromise = util.promisify(exec);
 const FILE_LIMITS = {
   images: {
     extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'],
-    maxSize: 100 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024, // 10MB
   },
   documents: {
     extensions: ['pdf', 'doc', 'docx', 'txt'],
-    maxSize: 100 * 1024 * 1024, // 50MB
+    maxSize: 50 * 1024 * 1024, // 50MB
   },
   videos: {
     extensions: ['mp4', 'avi', 'mov', 'wmv'],
-    maxSize: 500 * 1024 * 1024, // 100MB
+    maxSize: 100 * 1024 * 1024, // 100MB
   },
   audio: {
     extensions: ['mp3', 'wav', 'ogg'],
-    maxSize: 500 * 1024 * 1024, // 20MB
+    maxSize: 20 * 1024 * 1024, // 20MB
   },
 };
 
@@ -90,7 +90,7 @@ export const cleanupLocalFiles = (filePaths: string[]) => {
     }
   });
 
-  // Delete parent folders if empty
+  // // Delete parent folders if empty
   // parentFolders.forEach(folder => {
   //   try {
   //     if (fs.existsSync(folder) && fs.readdirSync(folder).length === 0) {
@@ -114,20 +114,32 @@ export const uploadSingleFileToS3 = async (
   customFileName?: string
 ): Promise<string> => {
   const filePaths: string[] = [];
-  const tempDir = path.join(process.cwd(), 'uploads/temp');
+  const tempDir = path.join(process.cwd(), 'uploads', 'temp');
 
-  if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+  // Ensure temp directory exists
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
 
   try {
     // Determine source file path
     let sourcePath = file.path;
+
+    // If no path but has buffer (memory storage)
     if (!sourcePath && file.buffer) {
       sourcePath = path.join(tempDir, `${uuidv4()}_${file.originalname}`);
-      fs.writeFileSync(sourcePath, file.buffer as any);
+      fs.writeFileSync(sourcePath, file.buffer);
+      filePaths.push(sourcePath); // Track for cleanup
     }
-    if (!sourcePath) throw new Error('No file source available for upload');
 
-    filePaths.push(sourcePath);
+    // If we have a file path from disk storage, use it
+    if (sourcePath && fs.existsSync(sourcePath)) {
+      filePaths.push(sourcePath); // Track for cleanup
+    }
+
+    if (!sourcePath) {
+      throw new Error('No file source available for upload');
+    }
 
     // Generate unique filename base
     const fileExtension = path.extname(file.originalname).slice(1) || 'bin';

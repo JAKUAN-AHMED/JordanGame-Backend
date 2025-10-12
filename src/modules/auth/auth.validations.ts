@@ -25,6 +25,11 @@ const verifyEmailValidationSchema = z.object({
         invalid_type_error: 'Email must be a string.',
       })
       .email('Invalid email address.'),
+    token: z
+      .string({
+        required_error: 'Token is required.',
+        invalid_type_error: 'Token must be a string.',
+      }),
     otp: z
       .string({
         required_error: 'One time code is required.',
@@ -47,19 +52,22 @@ const forgotPasswordValidationSchema = z.object({
 
 const resetPasswordValidationSchema = z.object({
   body: z.object({
+    email: z
+      .string({
+        required_error: 'Email is required.',
+        invalid_type_error: 'Email must be a string.',
+      })
+      .email('Invalid email address.'),
     password: z
       .string({
-        required_error: 'Password is required.',
-        invalid_type_error: 'Password must be a string.',
+        required_error: 'password is required.',
       })
       .min(8, 'Password must be at least 8 characters long.'),
-      confirmpassword: z
+    confirmpassword: z
       .string({
-        required_error: 'Password is required.',
-        invalid_type_error: 'Password must be a string.',
+        required_error: 'confirm Password is required.',
       })
       .min(8, 'Password must be at least 8 characters long.'),
-   
   }),
 });
 

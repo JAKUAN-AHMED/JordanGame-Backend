@@ -17,8 +17,8 @@ const getExpirationTime = (expiration: string) => {
   return new Date();
 };
 
-const createToken = (payload: object, secret: Secret, expireTime: string) => {
-  return jwt.sign(payload, secret, { expiresIn: expireTime });
+const createToken = (payload: object, secret: Secret, expireTime: string): string => {
+  return jwt.sign(payload, secret, { expiresIn: expireTime } as jwt.SignOptions);
 };
 
 const verifyToken = async (
@@ -98,7 +98,7 @@ const accessAndRefreshToken = async (user: TUser) => {
   if (!user || !user.email) {
     throw new Error("Email is required for token generation. User: " + JSON.stringify(user));
   }
-  const payload = { userId: user?._id, email: user.email, role: user.role, name: user.fname };
+  const payload = { userId: user?._id, email: user.email, role: user.role };
   await Token.deleteMany({ user: user?._id });
   const accessToken = createToken(
     payload as JwtPayload,

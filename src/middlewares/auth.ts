@@ -24,7 +24,7 @@ const auth = (...roles: string[]) =>
       TokenType.ACCESS ? TokenType.ACCESS : TokenType.REFRESH
     );
     // Step 3: Attach user to the request object
-    req.User= verifyUser;
+    req.user = verifyUser as any;
     
     // Step 4: Check if the user exists and is active
     const user = await User.findById(verifyUser.userId);
