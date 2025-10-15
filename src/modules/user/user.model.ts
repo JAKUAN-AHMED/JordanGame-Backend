@@ -19,6 +19,10 @@ const userSchema = new Schema<TUser, UserModal>(
         'Please provide a valid email address',
       ],
     },
+    totalCarrots: {
+      type: Number,
+      default: 0,
+    },
     fullName: {
       type: String,
       required: [true, 'Full Name is required'],

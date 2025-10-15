@@ -35,7 +35,7 @@ const auth = (...roles: string[]) =>
         StatusCodes.BAD_REQUEST,
         'Your account is not verified.'
       );
-    } else if (user.profileStatus === 'block' || user.profileStatus === 'suspend' || user.profileStatus === 'delete') {
+    } else if (user.profileStatus === 'block' || user.profileStatus === 'suspend' || user.profileStatus === 'delete' || user.profileStatus === 'disabled' || user.profileStatus === 'inactive' ) {
       // Block users who are blocked, suspended, or deleted - they cannot access anything
       throw new AppError(
         StatusCodes.FORBIDDEN,

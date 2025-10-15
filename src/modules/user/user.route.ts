@@ -32,7 +32,7 @@ router.patch(
 //user account
 router
   .route('/account')
-  .delete(auth('common'), UserController.deleteMyProfile) // DELETE /account
+  .delete(auth('common'), UserController.deleteMyProfile) 
   .get(auth('common'), UserController.getMyProfile); // GET /account
 
 //update user account status

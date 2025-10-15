@@ -12,6 +12,7 @@ export type TUser = {
   password: string;
   fullName: string;
   profileImage: string;
+  totalCarrots?: number;
   role: Role;
   profileStatus: TUserStatus;
   lastLoginAt: Date;

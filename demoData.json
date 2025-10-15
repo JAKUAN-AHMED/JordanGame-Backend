@@ -1,0 +1,139 @@
+{
+  "contentExamples": {
+    "skin": [
+      {
+        "category": "skin",
+        "name": "Golden Bunny Skin",
+        "description": "A beautiful golden skin that makes your bunny shine brightly",
+        "numberOfCarrot": 150,
+        "imgUrl": "https://example.com/images/golden-bunny.png",
+        "status": "active"
+      },
+      {
+        "category": "skin",
+        "name": "Rainbow Bunny Skin",
+        "description": "A colorful rainbow skin with vibrant colors",
+        "numberOfCarrot": 200,
+        "imgUrl": "https://example.com/images/rainbow-bunny.png",
+        "status": "active"
+      },
+      {
+        "category": "skin",
+        "name": "Night Shadow Skin",
+        "description": "A mysterious dark skin perfect for night jumps",
+        "numberOfCarrot": 250,
+        "imgUrl": "https://example.com/images/night-shadow.png",
+        "status": "locked"
+      }
+    ],
+    "powerUp": [
+      {
+        "category": "power-up",
+        "name": "Speed Boost",
+        "description": "Increases your bunny's speed for a limited time",
+        "timeInSec": 30,
+        "imgUrl": "https://example.com/images/speed-boost.png",
+        "status": "active"
+      },
+      {
+        "category": "power-up",
+        "name": "Double Jump",
+        "description": "Allows your bunny to jump twice as high",
+        "timeInSec": 45,
+        "imgUrl": "https://example.com/images/double-jump.png",
+        "status": "active"
+      },
+      {
+        "category": "power-up",
+        "name": "Shield Protection",
+        "description": "Protects your bunny from obstacles for a short duration",
+        "timeInSec": 20,
+        "imgUrl": "https://example.com/images/shield.png",
+        "status": "locked"
+      }
+    ],
+    "achievement": [
+      {
+        "category": "achievement",
+        "name": "Sky High Jumper",
+        "description": "Reach a jump height of 100 feet",
+        "targetValueInFt": 100,
+        "imgUrl": "https://example.com/images/sky-high-achievement.png",
+        "status": "locked"
+      },
+      {
+        "category": "achievement",
+        "name": "Cloud Breaker",
+        "description": "Reach a jump height of 250 feet",
+        "targetValueInFt": 250,
+        "imgUrl": "https://example.com/images/cloud-breaker.png",
+        "status": "locked"
+      },
+      {
+        "category": "achievement",
+        "name": "Space Explorer",
+        "description": "Reach a jump height of 500 feet",
+        "targetValueInFt": 500,
+        "imgUrl": "https://example.com/images/space-explorer.png",
+        "status": "locked"
+      }
+    ],
+    "obstacles": [
+      {
+        "category": "obstacles",
+        "name": "Spike Wall",
+        "description": "A dangerous wall with sharp spikes",
+        "imgUrl": "https://example.com/images/spike-wall.png",
+        "status": "active"
+      },
+      {
+        "category": "obstacles",
+        "name": "Moving Platform",
+        "description": "A platform that moves horizontally",
+        "imgUrl": "https://example.com/images/moving-platform.png",
+        "status": "active"
+      },
+      {
+        "category": "obstacles",
+        "name": "Fire Ring",
+        "description": "A ring of fire that the bunny must avoid",
+        "imgUrl": "https://example.com/images/fire-ring.png",
+        "status": "active"
+      }
+    ]
+  },
+  "multipartFormDataExamples": {
+    "note": "When using multipart/form-data for file upload, use these field values",
+    "skin": {
+      "image": "[file upload - select your image file]",
+      "category": "skin",
+      "name": "Golden Bunny Skin",
+      "description": "A beautiful golden skin that makes your bunny shine brightly",
+      "numberOfCarrot": "150",
+      "status": "active"
+    },
+    "powerUp": {
+      "image": "[file upload - select your image file]",
+      "category": "power-up",
+      "name": "Speed Boost",
+      "description": "Increases your bunny's speed for a limited time",
+      "timeInSec": "30",
+      "status": "active"
+    },
+    "achievement": {
+      "image": "[file upload - select your image file]",
+      "category": "achievement",
+      "name": "Sky High Jumper",
+      "description": "Reach a jump height of 100 feet",
+      "targetValueInFt": "100",
+      "status": "locked"
+    },
+    "obstacles": {
+      "image": "[file upload - select your image file]",
+      "category": "obstacles",
+      "name": "Spike Wall",
+      "description": "A dangerous wall with sharp spikes",
+      "status": "active"
+    }
+  }
+}

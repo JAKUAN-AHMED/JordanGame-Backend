@@ -6,6 +6,8 @@ import { ContactRoutes } from '../modules/contact/contact.routes';
 // import { ChatRoutes } from '../modules/chat/chat.routes';
 // import { MessageRoutes } from '../modules/message/message.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
+import { ContentRoutes } from '../modules/ContentManagement/content.routes';
+import { PackageRoutes } from '../modules/package/package.routes';
 
 // import { feedbackRoutes } from '../modules/feedback/feedback.route';
 
@@ -37,6 +39,14 @@ const apiRoutes = [
   {
     path:'/setting',
     route:SettingsRoutes
+  },
+  {
+    path:'/content',
+    route:ContentRoutes
+  },
+  {
+    path:'/package',
+    route:PackageRoutes
   }
 ];
 

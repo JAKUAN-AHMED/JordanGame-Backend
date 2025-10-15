@@ -1,57 +1,17 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { User } from '../modules/user/user.model';
-
+import { usersData } from '../data/userData';
+import bcrypt from 'bcrypt';
+import { packageModel } from '../modules/package/package.model';
+import { packagesData } from '../data/packageData';
+import { ContentModel } from '../modules/ContentManagement/content.model';
+import { contentsData } from '../data/contentData';
 // Load environment variables
 dotenv.config();
 
-// Sample data for default users - Updated to match new User model
-const usersData = [
-  {
-    fullName: 'Super Admin',
-    email: 'superadmin@gmail.com',
-    password: '$2a$08$cUQ3uMdbQjlyDF/dgn5mNuEt9fLJZqq8TaT9aKabrFuG5wND3/mPO', // Hashed password: 12345678
-    profileImage: 'https://i.pravatar.cc/300?img=1',
-    role: 'admin',
-    profileStatus: 'active',
-    isEmailVerified: true,
-    isResetPassword: false,
-    failedLoginAttempts: 0,
-  },
-  {
-    fullName: 'Testing Admin',
-    email: 'admin@gmail.com',
-    password: '$2a$08$cUQ3uMdbQjlyDF/dgn5mNuEt9fLJZqq8TaT9aKabrFuG5wND3/mPO', // Hashed password: 12345678
-    profileImage: 'https://i.pravatar.cc/300?img=2',
-    role: 'admin',
-    profileStatus: 'active',
-    isEmailVerified: true,
-    isResetPassword: false,
-    failedLoginAttempts: 0,
-  },
-  {
-    fullName: 'Test User One',
-    email: 'user1@gmail.com',
-    password: '$2a$08$cUQ3uMdbQjlyDF/dgn5mNuEt9fLJZqq8TaT9aKabrFuG5wND3/mPO', // Hashed password: 12345678
-    profileImage: 'https://i.pravatar.cc/300?img=3',
-    role: 'user',
-    profileStatus: 'active',
-    isEmailVerified: true,
-    isResetPassword: false,
-    failedLoginAttempts: 0,
-  },
-  {
-    fullName: 'Test User Two',
-    email: 'user2@gmail.com',
-    password: '$2a$08$cUQ3uMdbQjlyDF/dgn5mNuEt9fLJZqq8TaT9aKabrFuG5wND3/mPO', // Hashed password: 12345678
-    profileImage: 'https://i.pravatar.cc/300?img=4',
-    role: 'user',
-    profileStatus: 'active',
-    isEmailVerified: true,
-    isResetPassword: false,
-    failedLoginAttempts: 0,
-  },
-];
+
+
 
 // Function to drop the entire database
 const dropDatabase = async () => {
@@ -67,13 +27,44 @@ const dropDatabase = async () => {
 const seedUsers = async () => {
   try {
     await User.deleteMany();
-    await User.insertMany(usersData);
+    const ModifiedData=await Promise.all(
+      usersData.map(async (user) => ({
+        ...user,
+        password: await bcrypt.hash(user.password, 10), 
+      }))
+    );
+    await User.insertMany(ModifiedData);
     console.log('Users seeded successfully!');
   } catch (err) {
     console.error('Error seeding users:', err);
   }
 };
 
+
+//seed packages
+
+const seedPackages = async () => {
+  try {
+    await packageModel.deleteMany({});
+    await packageModel.insertMany(packagesData);
+    console.log('Packages seeded successfully!');
+  } catch (err) {
+    console.error('Error seeding packages:', err);
+  }
+};
+
+//seed content data
+
+
+const seedContents = async () => {
+  try {
+    await ContentModel.deleteMany({});
+    await ContentModel.insertMany(contentsData);
+    console.log('Contents seeded successfully!');
+  } catch (err) {
+    console.error('Error seeding contents:', err);
+  }
+};
 // Connect to MongoDB
 const connectToDatabase = async () => {
   try {
@@ -94,7 +85,13 @@ const seedDatabase = async () => {
     await connectToDatabase();
     await dropDatabase();
     await seedUsers();
-    console.log('--------------> Database seeding completed <--------------');
+    await seedPackages();
+    await seedContents();
+
+    console.log('➡️  Users seeding Sucessfully <--------------');
+    console.log('➡️  Packages seeding Sucessfully <--------------');
+    console.log('➡️  Contents seeding Sucessfully <--------------');
+    console.log('➡️  Database seeding completed <--------------');
   } catch (err) {
     console.error('Error seeding database:', err);
   } finally {
