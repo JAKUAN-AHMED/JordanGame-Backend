@@ -61,34 +61,7 @@ const UpdateProfile = async (userId: string,payload:Partial<TUser>)=> {
   return updatedUser;
 };
 
-const updateUserStatus = async (
-  userId: string,
-  profileStatus:TUserStatus
-)=> {
-  if (!profileStatus) {
-    throw new AppError(StatusCodes.BAD_REQUEST, 'Profile status payload is required');
-  }
 
-  // Validate status value
-  
-  if (!UserStatus.includes(profileStatus)) {
-    throw new AppError(StatusCodes.BAD_REQUEST, `Invalid status. Must be one of: ${UserStatus.join(', ')}`);
-  }
-
-  // Update user directly
-  const result = await User.findByIdAndUpdate(
-    userId,
-    { $set: { profileStatus: profileStatus } },
-    { new: true, select: '-password' }
-    
-  );
-
-  if (!result) {
-    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-  }
-
-  return result;
-};
 
 const getMyProfile = async (userId: string): Promise<TUser | null> => {
   const result = await User.findById(userId, '-password');
@@ -204,7 +177,6 @@ export const UserService = {
   getAllUsers,
   getSingleUser,
   UpdateProfile,
-  updateUserStatus,
   getMyProfile,
   deleteMyProfile,
   recoverAccount,

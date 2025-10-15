@@ -50,27 +50,6 @@ const UpdateProfile = catchAsync(async (req, res) => {
   });
 });
 
-//update user status from database (Admin only)
-const updateUserStatus = catchAsync(async (req, res) => {
-  // Admin updates other user's status via params.userId
-  const { userId } = req.params;
-  const { profileStatus } = req.body;
-
-  if (!userId) {
-    throw new AppError(StatusCodes.BAD_REQUEST, 'userId is required in URL params');
-  }
-
-  if (!profileStatus) {
-    throw new AppError(StatusCodes.BAD_REQUEST, 'profileStatus is required in request body');
-  }
-
-  const result = await UserService.updateUserStatus(userId, profileStatus);
-  sendResponse(res, {
-    code: StatusCodes.OK,
-    data: result,
-    message: 'User status updated successfully',
-  });
-});
 
 //get my profile
 const getMyProfile = catchAsync(async (req, res) => {
@@ -150,7 +129,6 @@ export const UserController = {
   getAllUsers,
   UpdateProfile,
   getSingleUser,
-  updateUserStatus,
   getMyProfile,
   deleteMyProfile,
   recoverAccount,

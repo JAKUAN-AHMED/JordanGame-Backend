@@ -8,6 +8,7 @@ import { ContactRoutes } from '../modules/contact/contact.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
 import { ContentRoutes } from '../modules/ContentManagement/content.routes';
 import { PackageRoutes } from '../modules/package/package.routes';
+import { ActionRoutes } from '../modules/action/action.routes';
 
 // import { feedbackRoutes } from '../modules/feedback/feedback.route';
 
@@ -47,6 +48,10 @@ const apiRoutes = [
   {
     path:'/package',
     route:PackageRoutes
+  },
+  {
+    path:'/action',
+    route:ActionRoutes
   }
 ];
 

@@ -15,11 +15,6 @@ router.route('/all-user').get(auth('common'), UserController.getAllUsers);
 router
   .route('/single-user/:userId')
   .get(auth('common'), UserController.getSingleUser)
-  .patch(
-    auth('admin'),
-    validateRequest(UserValidation.changeUserStatusValidationSchema),
-    UserController.updateUserStatus
-  );
 
 //update user account
 router.patch(
