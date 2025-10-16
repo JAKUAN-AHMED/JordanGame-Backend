@@ -1,6 +1,6 @@
 export interface ITermsConditions {
     _id: string;
-    termsConditions: string;
+    text: string;
     createdAt: Date;
     updatedAt: Date;
 }

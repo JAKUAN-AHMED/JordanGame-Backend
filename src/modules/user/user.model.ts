@@ -31,13 +31,21 @@ const userSchema = new Schema<TUser, UserModal>(
       type: Date,
       default: Date.now(),
     },
+    phone: {
+      type: String,
+      required: [true, 'Phone number is required'],
+      unique: true,
+    },
     password: {
       type: String,
       required: [true, 'Password is required'],
       select: false,
       minlength: [8, 'Password must be at least 8 characters long'],
     },
-
+    address:{
+      type: String,
+      required: [true, 'Address is required'],
+    },
     role: {
       type: String,
       enum: {

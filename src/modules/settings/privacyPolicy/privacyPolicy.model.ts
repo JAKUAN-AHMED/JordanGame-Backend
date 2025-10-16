@@ -3,7 +3,7 @@ import { IPrivacyPolicy } from './privacyPolicy.interface';
 
 const privacyPolicySchema = new Schema<IPrivacyPolicy>(
   {
-    privacyPolicy: {
+    text: {
       type: String,
       required: true,
     },

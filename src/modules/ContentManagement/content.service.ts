@@ -22,6 +22,14 @@ const getAllContent = async (query: any) => {
   if (query.status) {
     filters.status = query.status;
   }
+  if (query.name) {
+    filters.name = query.name;
+  }
+
+  if (query.searchTerm) {
+    const searchRegex = new RegExp(query.searchTerm, 'i');
+    filters.$or = [{ name: searchRegex }, { description: searchRegex }];
+  }
 
   const contents = await ContentModel.find(filters)
     .sort({ createdAt: -1 })
@@ -31,8 +39,30 @@ const getAllContent = async (query: any) => {
   const total = await ContentModel.countDocuments(filters);
   const totalPage = Math.ceil(total / limit);
 
+  //overview
+   const totalContent = await ContentModel.countDocuments();
+  const totalSkin = await ContentModel.countDocuments({ category: 'skin' });
+  const totalAchievement = await ContentModel.countDocuments({
+    category: 'achievement',
+  });
+  const totalPowerUp = await ContentModel.countDocuments({
+    category: 'power-up',
+  });
+  const totalObstacle = await ContentModel.countDocuments({
+    category: 'obstacles',
+  });
+
+  const overview:any={
+    totalContent,
+    totalSkin,
+    totalAchievement,
+    totalPowerUp,
+    totalObstacle
+  }
+
   return {
     contents,
+    overview,
     meta: {
       page,
       limit,
@@ -73,17 +103,6 @@ const deleteContent = async (id: string): Promise<any> => {
   return content;
 };
 
-const getContentByCategory = async (category: string): Promise<Icontent[]> => {
-  const contents = await ContentModel.find({ category }).sort({
-    createdAt: -1,
-  });
-  return contents;
-};
-
-const getContentByStatus = async (status: string): Promise<Icontent[]> => {
-  const contents = await ContentModel.find({ status }).sort({ createdAt: -1 });
-  return contents;
-};
 
 export const ContentService = {
   createContent,
@@ -91,6 +110,4 @@ export const ContentService = {
   getContentById,
   updateContent,
   deleteContent,
-  getContentByCategory,
-  getContentByStatus,
 };

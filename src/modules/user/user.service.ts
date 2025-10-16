@@ -90,14 +90,19 @@ const getAllUsers = async (query: any) => {
   const filters: Record<string, any> = {
     isEmailVerified: true
   };
+  if(query.name){
+    filters.fullName={$regex:query.name,$options:'i'}
+  }
   if (query.searchTerm) {
     filters.$or = [
       { fullName: { $regex: query.searchTerm, $options: 'i' } },
       { email: { $regex: query.searchTerm, $options: 'i' } },
+      { address: { $regex: query.searchTerm, $options: 'i' } },
+      { name: { $regex: query.searchTerm, $options: 'i' } },
     ];
   }
   const users = await User.find(filters)
-    .select('-password')
+    .select('fullName email address createdAt role phone profileImage profileStatus')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);

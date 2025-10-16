@@ -10,7 +10,9 @@ export type TUser = {
   _id: Types.ObjectId;
   email: string;
   password: string;
-  fullName: string;
+  phone: string;
+  fullName: string; 
+  address: string;
   profileImage: string;
   totalCarrots?: number;
   role: Role;

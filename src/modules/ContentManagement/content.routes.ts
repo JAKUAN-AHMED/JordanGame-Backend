@@ -28,21 +28,6 @@ router.get(
     ContentController.getAllContent
 );
 
-// Get content by category
-// Example: GET /content/category/skin
-router.get(
-    '/category/:category',
-    auth('common'),
-    ContentController.getContentByCategory
-);
-
-// Get content by status
-// Example: GET /content/status/active
-router.get(
-    '/status/:status',
-    auth('common'),
-    ContentController.getContentByStatus
-);
 
 // Get single content by ID
 router.get(

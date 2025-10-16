@@ -3,7 +3,7 @@ import { ITermsConditions } from './termsConditions.interface';
 
 const termsConditionsSchema = new Schema<ITermsConditions>(
   {
-    termsConditions: {
+    text: {
       type: String,
       required: true,
     },

@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
 import { IAboutUs } from './aboutUs.interface';
 const aboutUsSchema = new Schema<IAboutUs>({
-  aboutUs: {
+  text: {
     type: String,
     required: true,
   },

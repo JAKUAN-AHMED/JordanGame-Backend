@@ -66,25 +66,6 @@ const deleteContent = catchAsync(async (req, res) => {
     });
 });
 
-const getContentByCategory = catchAsync(async (req, res) => {
-    const { category } = req.params;
-    const result = await ContentService.getContentByCategory(category);
-    sendResponse(res, {
-        code: StatusCodes.OK,
-        message: `${category} contents fetched successfully`,
-        data: result,
-    });
-});
-
-const getContentByStatus = catchAsync(async (req, res) => {
-    const { status } = req.params;
-    const result = await ContentService.getContentByStatus(status);
-    sendResponse(res, {
-        code: StatusCodes.OK,
-        message: `${status} contents fetched successfully`,
-        data: result,
-    });
-});
 
 export const ContentController = {
     createContent,
@@ -92,6 +73,4 @@ export const ContentController = {
     getContentById,
     updateContent,
     deleteContent,
-    getContentByCategory,
-    getContentByStatus,
 };

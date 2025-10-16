@@ -1,6 +1,6 @@
 export interface IPrivacyPolicy {
     _id: string;
-    privacyPolicy: string;
+    text: string;
     createdAt: Date;
     updatedAt: Date;
 }
