@@ -20,6 +20,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "MasterAdmin01",
   },
   {
     _id: new Types.ObjectId(),
@@ -40,6 +41,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "AdminPro77",
   },
   {
     _id: new Types.ObjectId(),
@@ -60,6 +62,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "ChillVibes75",
   },
   {
     _id: new Types.ObjectId(),
@@ -80,6 +83,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "SilentStorm",
   },
   {
     _id: new Types.ObjectId(),
@@ -100,6 +104,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "LunaDreamer",
   },
   {
     _id: new Types.ObjectId(),
@@ -120,6 +125,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "RapidBlaze",
   },
   {
     _id: new Types.ObjectId(),
@@ -140,6 +146,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "NeoRunner",
   },
   {
     _id: new Types.ObjectId(),
@@ -160,6 +167,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "ShadowPilot",
   },
   {
     _id: new Types.ObjectId(),
@@ -180,6 +188,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "CrimsonStar",
   },
   {
     _id: new Types.ObjectId(),
@@ -200,6 +209,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "FrostByte",
   },
   {
     _id: new Types.ObjectId(),
@@ -220,6 +230,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "EchoMist",
   },
   {
     _id: new Types.ObjectId(),
@@ -240,6 +251,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "AlphaWolf",
   },
   {
     _id: new Types.ObjectId(),
@@ -260,6 +272,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "NovaQueen",
   },
   {
     _id: new Types.ObjectId(),
@@ -280,6 +293,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "CyberJack",
   },
   {
     _id: new Types.ObjectId(),
@@ -300,6 +314,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "StarBlazer",
   },
   {
     _id: new Types.ObjectId(),
@@ -320,6 +335,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "DriftKing",
   },
   {
     _id: new Types.ObjectId(),
@@ -340,6 +356,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "PixelMage",
   },
   {
     _id: new Types.ObjectId(),
@@ -360,6 +377,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "AquaHunter",
   },
   {
     _id: new Types.ObjectId(),
@@ -380,6 +398,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "SkyRider",
   },
   {
     _id: new Types.ObjectId(),
@@ -400,6 +419,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "IronPulse",
   },
   {
     _id: new Types.ObjectId(),
@@ -420,6 +440,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "GhostNova",
   },
   {
     _id: new Types.ObjectId(),
@@ -440,6 +461,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "RubyFire",
   },
   {
     _id: new Types.ObjectId(),
@@ -460,6 +482,7 @@ export const usersData = [
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "BossMan23",
   },
   {
     _id: new Types.ObjectId(),
@@ -468,17 +491,18 @@ export const usersData = [
     phone: '+1-555-100-0024',
     password: '12345678',
     profileImage: 'https://i.pravatar.cc/300?img=24',
-    totalCarrots: 40,
+    totalCarrots: 39,
     role: 'user',
-    profileStatus: 'inactive',
-    address: '99 Evergreen Street, Tampa, USA',
+    profileStatus: 'active',
+    address: '32 Elm Circle, Denver, USA',
     lastLoginAt: new Date(),
-    isEmailVerified: false,
+    isEmailVerified: true,
     lastPasswordChange: new Date(),
     isResetPassword: false,
-    failedLoginAttempts: 2,
+    failedLoginAttempts: 0,
     lockUntil: undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
+    currentGametag: "TidalWave",
   },
 ];

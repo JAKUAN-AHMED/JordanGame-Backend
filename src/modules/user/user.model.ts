@@ -46,6 +46,15 @@ const userSchema = new Schema<TUser, UserModal>(
       type: String,
       required: [true, 'Address is required'],
     },
+    isHePlayedFirstTime: {
+      type: Boolean,
+      default: false,
+    },
+    CurrentGametag: {
+      type: String,
+      required: false,
+      default: 'NewBie',
+    },
     role: {
       type: String,
       enum: {

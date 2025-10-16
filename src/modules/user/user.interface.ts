@@ -13,6 +13,8 @@ export type TUser = {
   phone: string;
   fullName: string; 
   address: string;
+  isHePlayedFirstTime?: boolean;
+  CurrentGametag: string;
   profileImage: string;
   totalCarrots?: number;
   role: Role;
