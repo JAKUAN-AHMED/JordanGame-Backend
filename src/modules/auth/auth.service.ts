@@ -12,7 +12,7 @@ import { OtpType } from '../otp/otp.interface';
 
 import { Token } from '../token/token.model';
 import validator from 'validator';
-// import { ProfileModel } from '../profile/profile.model';
+
 
 
 const createUser = async (userData: TUser) => {

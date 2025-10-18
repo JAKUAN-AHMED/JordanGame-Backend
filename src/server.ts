@@ -38,6 +38,7 @@ async function main() {
     global.io = io;
   } catch (error) {
     errorLogger.error(colors.red('🤢 Failed to connect Database'));
+    console.log(error);
   }
 
   //handle unhandledRejection

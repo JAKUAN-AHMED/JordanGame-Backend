@@ -3,6 +3,8 @@ import catchAsync from '../../shared/catchAsync';
 import sendResponse from '../../shared/sendResponse';
 import AppError from '../../errors/AppError';
 import { UserService } from './user.service';
+import { TokenService } from '../token/token.service';
+import { TUser } from './user.interface';
 
 
 const createAdminOrSuperAdmin = catchAsync(async (req, res) => {
@@ -124,6 +126,21 @@ const recoverAccount = catchAsync(async (req, res) => {
   });
 });
 
+
+//SOCIAL
+
+const googleCallback = catchAsync(async (req, res) => {
+  const user = req.user;
+  // console.log("user",user);
+  const tokens = await TokenService.accessAndRefreshToken(user as TUser);
+
+  sendResponse(res,{
+    message:`Welcome Home`,
+    code:200,
+    data:{user,tokens}
+  })
+});
+
 export const UserController = {
   createAdminOrSuperAdmin,
   getAllUsers,
@@ -133,4 +150,5 @@ export const UserController = {
   deleteMyProfile,
   recoverAccount,
   ActivateDeactivateAccount,
+  googleCallback,
 };

@@ -1,0 +1,1 @@
+// collections.interface.ts

@@ -5,6 +5,7 @@ import validateRequest from '../../shared/validateRequest';
 import { UserValidation } from './user.validation';
 import fileUploadHandler from '../../shared/fileUploadHandler';
 import { Uploads_USER_FOLDER } from '../auth/auth.constant';
+import passport from 'passport';
 
 const upload = fileUploadHandler(Uploads_USER_FOLDER);
 
@@ -42,5 +43,19 @@ router.patch('/profile/recover', auth('admin'), UserController.recoverAccount);
 
 //make admin
 router.post('/admin', auth('admin'), UserController.createAdminOrSuperAdmin);
+
+
+
+
+//social login
+
+
+// Google login
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: "/login" }),
+  UserController.googleCallback
+);
 
 export const UserRoutes = router;

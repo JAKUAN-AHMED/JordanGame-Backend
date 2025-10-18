@@ -19,7 +19,7 @@ const createGameDashboard = async (data: Partial<IgameDashboard | any>) => {
   }
 
   //1 super carrot=20 game carrot
-  data.totalCarrots = data.totalCarrots / 20 || 0;
+  // data.totalCarrots = data.totalCarrots / 20 || 0;
 
   //get the badge for his high score
   const findAchievedBadges = await ContentModel.find({
@@ -112,6 +112,7 @@ const watchAdsAndGetCarrots = async (user: string, gameWatched: number) => {
   }
   return gameDashboard?.save();
 };
+
 
 export const GameDashboardService = {
   createGameDashboard,
