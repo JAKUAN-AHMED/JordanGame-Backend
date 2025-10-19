@@ -7,6 +7,7 @@ import { CollectionService } from "./collections.service";
 
 
 const createCollection = catchAsync(async (req, res) => {
+    req.body.userId = req.User.userId;
     const result = await CollectionService.createCollection(req.body);
     sendResponse(res, {
         code: StatusCodes.OK,
@@ -18,6 +19,7 @@ const createCollection = catchAsync(async (req, res) => {
 
 const updateCollection = catchAsync(async (req, res) => {
     const { id } = req.params;
+    req.body.userId = req.User.userId;
     const result = await CollectionService.updateCollection(id, req.body);
     sendResponse(res, {
         code: StatusCodes.OK,
@@ -27,8 +29,8 @@ const updateCollection = catchAsync(async (req, res) => {
 });
 
 
-const getAllCollection = catchAsync(async (req, res) => {
-    const result = await CollectionService.getAllCollection(req.query,req.User.userId as string);
+const getAllMyCollection = catchAsync(async (req, res) => {
+    const result = await CollectionService.getAllMyCollection(req.query,req.User.userId as string);
     sendResponse(res, {
         code: StatusCodes.OK,
         message: 'Collection fetched successfully',
@@ -39,5 +41,5 @@ const getAllCollection = catchAsync(async (req, res) => {
 export const CollectionController = {
     createCollection,
     updateCollection,
-    getAllCollection
+    getAllMyCollection
 };

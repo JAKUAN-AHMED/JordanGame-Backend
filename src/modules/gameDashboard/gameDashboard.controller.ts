@@ -24,7 +24,7 @@ const updateGameDashboard = catchAsync(async (req, res) => {
 })
 
 const watchAdsAndGetCarrots = catchAsync(async (req, res) => {
-    const result = await GameDashboardService.watchAdsAndGetCarrots(req.User.userId,req.body.gameWatched);
+    const result = await GameDashboardService.watchAdsAndGetCarrots(req.User.userId,req.body.adsWatched);
     sendResponse(res, {
         code: StatusCodes.OK,
         message: 'Game Dashboard updated successfully',
@@ -41,9 +41,31 @@ const shareAndGetCarrots = catchAsync(async (req, res) => {
     });
 })
 
+
+const getMyDashboard = catchAsync(async (req, res) => {
+    const result = await GameDashboardService.getMyDashboard(req.User.userId);
+    sendResponse(res, {
+        code: StatusCodes.OK,
+        message: 'Game Dashboard updated successfully',
+        data: result,
+    });
+})
+
+
+const getLeaderboard = catchAsync(async (req, res) => {
+    const result = await GameDashboardService.getLeaderboard(req.query);
+    sendResponse(res, {
+        code: StatusCodes.OK,
+        message: 'Game Leaderdoard Data fetched successfully',
+        data: result,
+    });
+})
+
 export const GameDashboardController = {
     createGameDashboard,
     updateGameDashboard,
     watchAdsAndGetCarrots,
-    shareAndGetCarrots
+    shareAndGetCarrots,
+    getMyDashboard,
+    getLeaderboard
 }

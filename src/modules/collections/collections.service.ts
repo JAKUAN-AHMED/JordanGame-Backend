@@ -162,10 +162,10 @@ const updateCollection = async (id: string, data: Partial<Icollection>) => {
 };
 
 //get the all collection
-const getAllCollection = async (query: any, userId: string) => {
-  const limit = query.limit || 10;
-  const page = query.page || 1;
-  const skip = (page - 1) * limit;
+const getAllMyCollection = async (query: any, userId: string) => {
+const limit=Number(query.limit) || 10;
+  const page=Number(query.page) || 1;
+  const skip = Number((page - 1) * limit);
   const filters: Record<string, any> = {
     user: userId,
   };
@@ -206,5 +206,5 @@ const getAllCollection = async (query: any, userId: string) => {
 export const CollectionService = {
   createCollection,
   updateCollection,
-  getAllCollection,
+  getAllMyCollection,
 };

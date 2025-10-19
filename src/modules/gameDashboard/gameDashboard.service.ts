@@ -7,6 +7,20 @@ import { User } from '../user/user.model';
 import { IgameDashboard } from './gameDashboard.interface';
 import { GameDashboardModel } from './gameDashboard.model';
 
+
+const levelUpLogic = (currentScore: number) => {
+  let level = 1;
+  let threshold = 100; // First level-up at 100 points
+
+  // Keep increasing the level until the score exceeds the threshold
+  while (currentScore >= threshold) {
+    level++;
+    threshold += 200; // Increase threshold by 200 for each level-up after the first
+  }
+
+  return level;
+};
+
 //create game dashboard
 const createGameDashboard = async (data: Partial<IgameDashboard | any>) => {
   const existingGameDashboard = await GameDashboardModel.findOne({
@@ -88,7 +102,10 @@ const updateGameDashboard = async (
     //update the number of game played
     if (data && data.numberOfGamesPlayed && existingGameDashboard.level) {
       data.numberOfGamesPlayed = Number(existingGameDashboard.numberOfGamesPlayed + 1);
-      data.level = Number(existingGameDashboard.level + 1);
+
+
+      //update the level
+      data.level=levelUpLogic(Number(data.highScoreInFt));
     }
     //final update
     const updatedData = await GameDashboardModel.findByIdAndUpdate(
@@ -104,12 +121,12 @@ const updateGameDashboard = async (
   }
 };
 
-const watchAdsAndGetCarrots = async (user: string, gameWatched: number) => {
+const watchAdsAndGetCarrots = async (user: string, adsWatched: number) => {
   const gameDashboard = await GameDashboardModel.findOne({ user });
   await NotFound(gameDashboard, 'Game Dashboard Not Found For This User');
   if (gameDashboard && gameDashboard.totalCarrots) {
     gameDashboard.totalCarrots =
-      Number(gameDashboard.totalCarrots) + Number(20) * Number(gameWatched);
+      Number(gameDashboard.totalCarrots) + Number(20) * Number(adsWatched);
   }
   return gameDashboard?.save();
 };
@@ -126,9 +143,59 @@ const shareAndGetCarrots = async (user: string) => {
   return gameDashboard?.save();
 };
 
+
+//get my dashboard
+const getMyDashboard = async (user: string) => {
+  const gameDashboard = await GameDashboardModel.findOne({ user });
+  await NotFound(gameDashboard, 'Game Dashboard Not Found For This User');
+  return gameDashboard;
+}
+
+//leaderboard according to the user higest score and level
+const getLeaderboard = async (query: any) => {
+  const limit=Number(query.limit) || 10;
+  const page=Number(query.page) || 1;
+  const skip = Number((page - 1) * limit);
+
+
+  const filters: Record<string, any> = {};
+
+  const resultData:any = await GameDashboardModel.find()
+  .populate('user')
+  .sort({ highScoreInFt: -1 ,level: -1 })
+  .skip(skip)
+  .limit(limit);
+
+  const filteredData=resultData.filter((data:any)=>{
+    if(query.name && resultData && resultData.user){
+      return resultData.user.fullName.toLowerCase().includes(query.name.toLowerCase());
+    }
+  })
+
+  const sortedData=filteredData.sort((a:any,b:any)=>{
+    if(a.highScoreInFt && b.highScoreInFt){
+      return b.highScoreInFt-a.highScoreInFt;
+    }
+  })
+
+  const total =query.name? sortedData.length:await GameDashboardModel.countDocuments();
+  const totalPage = Math.ceil(total / limit);
+  return {
+    data:query.name? sortedData: resultData,
+    meta: {
+      page,
+      limit,
+      total,
+      totalPage,
+    },
+  };
+  
+}
 export const GameDashboardService = {
   createGameDashboard,
   updateGameDashboard,
   watchAdsAndGetCarrots,
-  shareAndGetCarrots
+  shareAndGetCarrots,
+  getMyDashboard,
+  getLeaderboard
 };

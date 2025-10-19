@@ -3,14 +3,14 @@ import { UserRoutes } from '../modules/user/user.route';
 import { AuthRoutes } from '../modules/auth/auth.routes';
 import { SettingsRoutes } from '../modules/settings/settings.routes';
 import { ContactRoutes } from '../modules/contact/contact.routes';
-// import { ChatRoutes } from '../modules/chat/chat.routes';
-// import { MessageRoutes } from '../modules/message/message.routes';
 import { NotificationRoutes } from '../modules/notification/notification.routes';
 import { ContentRoutes } from '../modules/ContentManagement/content.routes';
 import { PackageRoutes } from '../modules/package/package.routes';
 import { ActionRoutes } from '../modules/action/action.routes';
+import { GameDashboardRoutes } from '../modules/gameDashboard/gameDashboard.routes';
+import { CollectionsRoutes } from '../modules/collections/collections.routes';
 
-// import { feedbackRoutes } from '../modules/feedback/feedback.route';
+
 
 
 const router = express.Router();
@@ -52,6 +52,14 @@ const apiRoutes = [
   {
     path:'/action',
     route:ActionRoutes
+  },
+  {
+    path:'/gaming-dashboard',
+    route:GameDashboardRoutes
+  },
+  {
+    path:'/collections',
+    route:CollectionsRoutes
   }
 ];
 
