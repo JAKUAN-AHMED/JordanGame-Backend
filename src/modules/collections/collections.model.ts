@@ -8,7 +8,6 @@ const CollectionSchema = new Schema<Icollection>({
   skin: [{ type: Schema.Types.ObjectId, ref: 'Content' ,default:[]}],
   carrotPackages: [{ type: Schema.Types.ObjectId, ref: 'Package',default:[] }],
   PowerUps: [{ type: Schema.Types.ObjectId, ref: 'Content' ,default:[]}],
-  IsFirstTime: { type: Boolean, default: false },
 },
 {
   timestamps: true,

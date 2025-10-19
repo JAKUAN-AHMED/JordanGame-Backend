@@ -14,6 +14,7 @@ export type TUser = {
   fullName: string; 
   address: string;
   isHePlayedFirstTime?: boolean;
+  isHeBroughtFirstTime?: boolean;
   CurrentGametag: string;
   profileImage: string;
   totalCarrots?: number;

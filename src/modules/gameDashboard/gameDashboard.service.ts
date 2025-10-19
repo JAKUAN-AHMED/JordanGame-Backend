@@ -7,7 +7,6 @@ import { User } from '../user/user.model';
 import { IgameDashboard } from './gameDashboard.interface';
 import { GameDashboardModel } from './gameDashboard.model';
 
-
 const levelUpLogic = (currentScore: number) => {
   let level = 1;
   let threshold = 100; // First level-up at 100 points
@@ -47,7 +46,12 @@ const createGameDashboard = async (data: Partial<IgameDashboard | any>) => {
   const res = await GameDashboardModel.create(data);
   if (res) {
     //make this user first time true
-    await User.findByIdAndUpdate(data.user, { isHePlayedFirstTime: true , $inc: { totalGamesPlayed: 1 },level:1});
+    await User.findByIdAndUpdate(data.user, { isHePlayedFirstTime: true });
+
+    //update level and total games played
+    await GameDashboardModel.findByIdAndUpdate(res._id, {
+      $inc: { totalGamesPlayed: 1,level:1 },
+    });
   }
   //return the result
   return res;
@@ -98,14 +102,14 @@ const updateGameDashboard = async (
       data.highScoreInFt = data.highScoreInFt;
     }
 
-
     //update the number of game played
     if (data && data.numberOfGamesPlayed && existingGameDashboard.level) {
-      data.numberOfGamesPlayed = Number(existingGameDashboard.numberOfGamesPlayed + 1);
-
+      data.numberOfGamesPlayed = Number(
+        existingGameDashboard.numberOfGamesPlayed + 1
+      );
 
       //update the level
-      data.level=levelUpLogic(Number(data.highScoreInFt));
+      data.level = levelUpLogic(Number(data.highScoreInFt));
     }
     //final update
     const updatedData = await GameDashboardModel.findByIdAndUpdate(
@@ -131,7 +135,6 @@ const watchAdsAndGetCarrots = async (user: string, adsWatched: number) => {
   return gameDashboard?.save();
 };
 
-
 //write code for share and get carrots
 const shareAndGetCarrots = async (user: string) => {
   const gameDashboard = await GameDashboardModel.findOne({ user });
@@ -143,58 +146,79 @@ const shareAndGetCarrots = async (user: string) => {
   return gameDashboard?.save();
 };
 
-
 //get my dashboard
 const getMyDashboard = async (user: string) => {
   const gameDashboard = await GameDashboardModel.findOne({ user });
   await NotFound(gameDashboard, 'Game Dashboard Not Found For This User');
   return gameDashboard;
-}
+};
 
 //leaderboard according to the user higest score and level
 const getLeaderboard = async (query: any) => {
-  const limit=Number(query.limit) || 10;
-  const page=Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const page = Number(query.page) || 1;
   const skip = Number((page - 1) * limit);
-
 
   const filters: Record<string, any> = {};
 
-
   // i want to get today leaderboard to display
   const today = new Date();
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
-  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+  const startOfDay = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+    0,
+    0,
+    0,
+    0
+  );
+  const endOfDay = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+    23,
+    59,
+    59,
+    999
+  );
   filters.createdAt = { $gte: startOfDay, $lte: endOfDay };
 
-  const resultData:any = await GameDashboardModel.find()
-  .populate('user')
-  .sort({ highScoreInFt: -1 ,level: -1 })
-  .skip(skip)
-  .limit(limit);
+  const resultData: any = await GameDashboardModel.find()
+    .populate({
+      path: 'user',
+      model: 'User',
+      select: 'fullName profileImage totalCarrots CurrentGametag _id',
+    })
+    .sort({ highScoreInFt: -1, level: -1 })
+    .skip(skip)
+    .limit(limit);
 
-  const filteredData=resultData.filter((data:any)=>{
-    if(query.name && resultData && resultData.user){
-      return resultData.user.fullName.toLowerCase().includes(query.name.toLowerCase());
+  const filteredData = resultData.filter((data: any) => {
+    if (query.name && resultData && resultData.user) {
+      return resultData.user.fullName
+        .toLowerCase()
+        .includes(query.name.toLowerCase());
     }
-  })
+  });
 
-  const sortedData=filteredData.sort((a:any,b:any)=>{
-    if(a.highScoreInFt && b.highScoreInFt){
-      return b.highScoreInFt-a.highScoreInFt;
+  const sortedData = filteredData.sort((a: any, b: any) => {
+    if (a.highScoreInFt && b.highScoreInFt) {
+      return b.highScoreInFt - a.highScoreInFt;
     }
-  })
+  });
 
   const todayLeaderboard = await GameDashboardModel.find(filters)
-  .populate('user')
-  .sort({ highScoreInFt: -1 ,level: -1 })
-  .skip(skip)
-  .limit(limit);
+    .populate('user')
+    .sort({ highScoreInFt: -1, level: -1 })
+    .skip(skip)
+    .limit(limit);
 
-  const total =query.name? sortedData.length:await GameDashboardModel.countDocuments();
+  const total = query.name
+    ? sortedData.length
+    : await GameDashboardModel.countDocuments();
   const totalPage = Math.ceil(total / limit);
   return {
-    data:query.name? sortedData: resultData,
+    data: query.name ? sortedData : resultData,
     todayLeaderboard,
     meta: {
       page,
@@ -203,13 +227,12 @@ const getLeaderboard = async (query: any) => {
       totalPage,
     },
   };
-  
-}
+};
 export const GameDashboardService = {
   createGameDashboard,
   updateGameDashboard,
   watchAdsAndGetCarrots,
   shareAndGetCarrots,
   getMyDashboard,
-  getLeaderboard
+  getLeaderboard,
 };

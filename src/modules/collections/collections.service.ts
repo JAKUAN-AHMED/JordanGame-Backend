@@ -32,7 +32,8 @@ const updateUserCarrots = async (
 };
 
 const createCollection = async (data: Partial<Icollection>) => {
-  // Find the user by ID
+  // Find the user by ID and naming of the user kept isHeHasEnoughCarrots
+  
   let isHeHasEnoughCarrots: any = await User.findById(data.user);
   await NotFound(isHeHasEnoughCarrots, 'User Not Found');
 
@@ -70,6 +71,9 @@ const createCollection = async (data: Partial<Icollection>) => {
     }
   }
 
+  // Update isHeHasEnoughCarrots brought first time record trac
+  isHeHasEnoughCarrots.isHeBroughtFirstTime = true;
+  
   // Save the final changes to the user's carrots
   await isHeHasEnoughCarrots?.save();
 
@@ -85,16 +89,17 @@ const createCollection = async (data: Partial<Icollection>) => {
   // Handle already existing collection
   await AlreadyExist(isExistAlready);
 
-  // Set IsFirstTime to true and create the collection
-  data.IsFirstTime = true;
   return await CollectionModel.create(data);
 };
 
 //update collection
 
-const updateCollection = async (id: string, data: Partial<Icollection>) => {
+const updateCollection = async (
+  id: string,
+  data: Partial<Icollection> | any
+) => {
   // Find the user by ID
-  const isHeHasEnoughCarrots = await User.findById(data.user);
+  let isHeHasEnoughCarrots: any = await User.findById(data.user);
   await NotFound(isHeHasEnoughCarrots, 'User Not Found');
 
   //check  the collection has for this user
@@ -106,11 +111,22 @@ const updateCollection = async (id: string, data: Partial<Icollection>) => {
   // Handle skin addition
   if (data.skin && data.skin.length > 0) {
     // Check if each skin exists in the database
-    const checkSkinsExist = await ContentModel.find({
+    const checkSkinsExist:any = await ContentModel.find({
       _id: { $in: data.skin },
     });
-    if (checkSkinsExist.length !== data.skin.length) {
-      throw new Error('One or more skins not found');
+    if ( checkSkinsExist &&
+      checkSkinsExist.length > 0 &&
+      isHeHasEnoughCarrots &&
+      isHeHasEnoughCarrots.totalCarrots > 0 &&
+      checkSkinsExist.numberOfCarrot <= isHeHasEnoughCarrots.totalCarrots
+    ) {
+      isHeHasEnoughCarrots.totalCarrots = Number(
+        isHeHasEnoughCarrots.totalCarrots - checkSkinsExist.numberOfCarrot
+      );
+    } else {
+      if (checkSkinsExist.length <= 0) {
+        throw new Error('One or more skins not found');
+      }
     }
     // Add the skins to UpdatedData using $addToSet (ensure no duplicates)
     UpdatedData.skin = data.skin;
@@ -119,11 +135,22 @@ const updateCollection = async (id: string, data: Partial<Icollection>) => {
   // Handle PowerUps addition
   if (data.PowerUps && data.PowerUps.length > 0) {
     // Check if each PowerUp exists in the database
-    const checkPowerUpsExist = await ContentModel.find({
+    const checkPowerUpsExist:any = await ContentModel.find({
       _id: { $in: data.PowerUps },
     });
-    if (checkPowerUpsExist.length !== data.PowerUps.length) {
-      throw new Error('One or more PowerUps not found');
+    if (
+      checkPowerUpsExist.length > 0 &&
+      isHeHasEnoughCarrots &&
+      isHeHasEnoughCarrots.totalCarrots > 0 &&
+      checkPowerUpsExist.numberOfCarrot <= isHeHasEnoughCarrots.totalCarrots
+    ) {
+      isHeHasEnoughCarrots.totalCarrots = Number(
+        isHeHasEnoughCarrots.totalCarrots - checkPowerUpsExist.numberOfCarrot
+      );
+    } else {
+      if (checkPowerUpsExist.length <= 0) {
+        throw new Error('One or more skins not found');
+      }
     }
     // Add the PowerUps to UpdatedData
     UpdatedData.PowerUps = data.PowerUps;
@@ -135,8 +162,9 @@ const updateCollection = async (id: string, data: Partial<Icollection>) => {
     const checkCarrotPackagesExist = await ContentModel.find({
       _id: { $in: data.carrotPackages },
     });
-    if (checkCarrotPackagesExist.length !== data.carrotPackages.length) {
-      throw new Error('One or more Carrot Packages not found');
+
+    if (checkCarrotPackagesExist.length <= 0) {
+      throw new Error('One or more skins not found');
     }
 
     /**
@@ -146,6 +174,11 @@ const updateCollection = async (id: string, data: Partial<Icollection>) => {
     // Add the carrot packages to UpdatedData
     UpdatedData.carrotPackages = data.carrotPackages;
   }
+
+
+  // Save the final changes to the user's carrots
+  await isHeHasEnoughCarrots?.save();
+
 
   // Now update the collection in the database
   const RESPONSE = await CollectionModel.findByIdAndUpdate(
@@ -163,8 +196,8 @@ const updateCollection = async (id: string, data: Partial<Icollection>) => {
 
 //get the all collection
 const getAllMyCollection = async (query: any, userId: string) => {
-const limit=Number(query.limit) || 10;
-  const page=Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const page = Number(query.page) || 1;
   const skip = Number((page - 1) * limit);
   const filters: Record<string, any> = {
     user: userId,
@@ -181,10 +214,11 @@ const limit=Number(query.limit) || 10;
   }
 
   const data = await CollectionModel.find(filters)
-  .populate('skin carrotPackages PowerUps')
-  .skip(skip).limit(limit);
+    .populate('skin carrotPackages PowerUps')
+    .skip(skip)
+    .limit(limit);
   if (!data) {
-    throw new AppError(404,'Collection Not Found');
+    throw new AppError(404, 'Collection Not Found');
   }
 
   //pagination data
@@ -198,7 +232,7 @@ const limit=Number(query.limit) || 10;
       total,
       totalPage,
     },
-  }; 
+  };
 };
 
 //get my package collection

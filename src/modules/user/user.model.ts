@@ -76,8 +76,11 @@ const userSchema = new Schema<TUser, UserModal>(
       type: Boolean,
       default: false,
     },
-
     lastPasswordChange: { type: Date },
+    isHeBroughtFirstTime: {
+      type: Boolean,
+      default: false,
+    },
     isResetPassword: {
       type: Boolean,
       default: false,

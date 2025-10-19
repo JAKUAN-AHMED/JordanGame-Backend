@@ -7,5 +7,4 @@ export interface Icollection{
     skin?:Types.ObjectId[];
     carrotPackages?:Types.ObjectId[];
     PowerUps?:Types.ObjectId[];
-    IsFirstTime:boolean;
 }
