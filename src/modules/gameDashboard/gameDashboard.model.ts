@@ -14,6 +14,11 @@ const gameDashboardSchema = new Schema<IgameDashboard>({
         required: true,
         ref: 'User'
     },
+    level: {
+        type: Number,
+        required: true,
+        default: 0
+    },
     highScoreInFt: {
         type: Number,
         required: true,

@@ -33,7 +33,7 @@ const createGameDashboard = async (data: Partial<IgameDashboard | any>) => {
   const res = await GameDashboardModel.create(data);
   if (res) {
     //make this user first time true
-    await User.findByIdAndUpdate(data.user, { isHePlayedFirstTime: true });
+    await User.findByIdAndUpdate(data.user, { isHePlayedFirstTime: true , $inc: { totalGamesPlayed: 1 },level:1});
   }
   //return the result
   return res;
@@ -86,8 +86,9 @@ const updateGameDashboard = async (
 
 
     //update the number of game played
-    if (data && data.numberOfGamesPlayed) {
-      data.numberOfGamesPlayed = existingGameDashboard.numberOfGamesPlayed + 1;
+    if (data && data.numberOfGamesPlayed && existingGameDashboard.level) {
+      data.numberOfGamesPlayed = Number(existingGameDashboard.numberOfGamesPlayed + 1);
+      data.level = Number(existingGameDashboard.level + 1);
     }
     //final update
     const updatedData = await GameDashboardModel.findByIdAndUpdate(
@@ -114,8 +115,20 @@ const watchAdsAndGetCarrots = async (user: string, gameWatched: number) => {
 };
 
 
+//write code for share and get carrots
+const shareAndGetCarrots = async (user: string) => {
+  const gameDashboard = await GameDashboardModel.findOne({ user });
+  await NotFound(gameDashboard, 'Game Dashboard Not Found For This User');
+  if (gameDashboard && gameDashboard.totalCarrots) {
+    gameDashboard.totalCarrots =
+      Number(gameDashboard.totalCarrots) + Number(20);
+  }
+  return gameDashboard?.save();
+};
+
 export const GameDashboardService = {
   createGameDashboard,
   updateGameDashboard,
   watchAdsAndGetCarrots,
+  shareAndGetCarrots
 };

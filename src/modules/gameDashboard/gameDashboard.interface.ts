@@ -7,6 +7,7 @@ export interface IgameDashboard {
     user: Types.ObjectId;
     totalCarrots: number;
     highScoreInFt: number;
+    level?: number;
     numberOfGamesPlayed: number;
     achievedBadges: Types.ObjectId[];
     createdAt: Date;
