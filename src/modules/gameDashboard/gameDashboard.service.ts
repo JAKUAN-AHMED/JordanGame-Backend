@@ -160,6 +160,13 @@ const getLeaderboard = async (query: any) => {
 
   const filters: Record<string, any> = {};
 
+
+  // i want to get today leaderboard to display
+  const today = new Date();
+  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+  const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+  filters.createdAt = { $gte: startOfDay, $lte: endOfDay };
+
   const resultData:any = await GameDashboardModel.find()
   .populate('user')
   .sort({ highScoreInFt: -1 ,level: -1 })
@@ -178,10 +185,17 @@ const getLeaderboard = async (query: any) => {
     }
   })
 
+  const todayLeaderboard = await GameDashboardModel.find(filters)
+  .populate('user')
+  .sort({ highScoreInFt: -1 ,level: -1 })
+  .skip(skip)
+  .limit(limit);
+
   const total =query.name? sortedData.length:await GameDashboardModel.countDocuments();
   const totalPage = Math.ceil(total / limit);
   return {
     data:query.name? sortedData: resultData,
+    todayLeaderboard,
     meta: {
       page,
       limit,
