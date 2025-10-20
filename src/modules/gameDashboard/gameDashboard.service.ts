@@ -189,6 +189,7 @@ const getLeaderboard = async (query: any) => {
       model: 'User',
       select: 'fullName profileImage totalCarrots CurrentGametag _id',
     })
+    .select('user totalCarrots highScoreInFt level numberOfGamesPlayed')
     .sort({ highScoreInFt: -1, level: -1 })
     .skip(skip)
     .limit(limit);
