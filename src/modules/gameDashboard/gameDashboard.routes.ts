@@ -13,10 +13,9 @@ const router=Router();
 router.route('/')
 .post(auth('common'),GameDashboardController.createGameDashboard)
 .get(auth('common'),GameDashboardController.getMyDashboard)
-
-//update game dashboard
-router.route('/:id')
 .patch(auth('common'),GameDashboardController.updateGameDashboard)
+
+
 
 router.route('/watch-ads-and-get-carrots')
 .post(auth('common'),GameDashboardController.watchAdsAndGetCarrots)

@@ -102,7 +102,7 @@ const getAllUsers = async (query: any) => {
     ];
   }
   const users = await User.find(filters)
-    .select('fullName email address createdAt role phone profileImage profileStatus')
+    .select('fullName email address createdAt role phone profileImage isHePlayedFirstTime isHeBroughtFirstTime profileStatus')
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);

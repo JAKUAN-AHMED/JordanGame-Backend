@@ -5,7 +5,7 @@ import { TransactionService } from './Transactions.service';
 
 // Transactions.controller.ts
 const makePayment = catchAsync(async (req, res) => {
-  req.body.user = req.User.userId;
+  req.body.user = (req.user as any).userId as any;
   const result = await TransactionService.makePayment(req.body);
   sendResponse(res, {
     code: StatusCodes.CREATED,
@@ -24,7 +24,7 @@ const getAllTransaction = catchAsync(async (req, res) => {
 });
 
 const getMyTransaction = catchAsync(async (req, res) => {
-  const result = await TransactionService.getMyTransaction(req.User.userId);
+  const result = await TransactionService.getMyTransaction((req.user as any).userId as any);
   sendResponse(res, {
     code: StatusCodes.OK,
     message: 'Transactions fetched successfully',

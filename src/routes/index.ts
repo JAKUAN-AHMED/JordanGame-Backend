@@ -9,6 +9,8 @@ import { PackageRoutes } from '../modules/package/package.routes';
 import { ActionRoutes } from '../modules/action/action.routes';
 import { GameDashboardRoutes } from '../modules/gameDashboard/gameDashboard.routes';
 import { CollectionsRoutes } from '../modules/collections/collections.routes';
+import { DashboardRoutes } from '../modules/dashboard/dashboard.routes';
+import { TransactionRotues } from '../modules/Transactions/Transactions.routes';
 
 
 
@@ -54,12 +56,20 @@ const apiRoutes = [
     route:ActionRoutes
   },
   {
+    path:'/dashboard',
+    route:DashboardRoutes
+  },
+  {
     path:'/gaming-dashboard',
     route:GameDashboardRoutes
   },
   {
     path:'/collections',
     route:CollectionsRoutes
+  },
+  {
+    path:'/transaction',
+    route:TransactionRotues
   }
 ];
 
