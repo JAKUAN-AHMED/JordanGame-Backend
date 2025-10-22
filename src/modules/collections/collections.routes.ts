@@ -1,16 +1,17 @@
 import { Router } from "express";
 import { CollectionController } from "./collections.controller";
+import auth from "../../middlewares/auth";
 
 // collections.routes.ts
 const router=Router();
 
 
 router.route('/')
-.post(CollectionController.createCollection)
-.get(CollectionController.getAllMyCollection)
+.post(auth('common'),CollectionController.createCollection)
+.get(auth('common'),CollectionController.getAllMyCollection)
 
 router.route('/:id')
-.patch(CollectionController.updateCollection)
+.patch(auth('common'),CollectionController.updateCollection)
 
 
 

@@ -9,6 +9,7 @@ import { CollectionModel } from './collections.model';
 import AppError from '../../errors/AppError';
 import { packageModel } from '../package/package.model';
 import { StatusCodes } from 'http-status-codes';
+import { TransactionModel } from '../Transactions/Transactions.model';
 
 const updateUserCarrots = async (
   user: any,
@@ -31,85 +32,91 @@ const updateUserCarrots = async (
     user.totalCarrots &&
     user.totalCarrots > 0 &&
     totalCarrots > 0 &&
-    totalCarrots<= user.totalCarrots
+    totalCarrots <= user.totalCarrots
   ) {
     // Update user carrots
     user.totalCarrots = Number(user.totalCarrots - totalCarrots);
     await user.save();
-  }
-  else {
+  } else {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Not enough carrots');
   }
 };
 
 const createCollection = async (data: Partial<Icollection>) => {
-  // Find the user by ID and naming of the user kept isHeHasEnoughCarrots
+  // Find the user by ID
+  const user:any = await User.findById(data.user);
+  await NotFound(user, 'User Not Found');
 
-  let isHeHasEnoughCarrots: any = await User.findById(data.user);
-  await NotFound(isHeHasEnoughCarrots, 'User Not Found');
-
-  // Check and update carrots for skin, PowerUps, and carrotPackages
-  if (data && data.skin) {
-    await updateUserCarrots(
-      isHeHasEnoughCarrots,
-      data.skin as any,
-      ContentModel
-    );
+  //check is he brought first time
+  if (user.isHeBroughtFirstTime) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'User is not allowed to create collection');
+  }
+  // Update carrots for skin
+  if (data.skin) {
+    await updateUserCarrots(user, data.skin as any, ContentModel);
   }
 
+  // Update carrots for PowerUps
   if (data.PowerUps) {
-    await updateUserCarrots(
-      isHeHasEnoughCarrots,
-      data.PowerUps as any,
-      ContentModel
-    );
+    await updateUserCarrots(user, data.PowerUps as any, ContentModel);
   }
 
-
+  // Update carrots for carrotPackages
   if (data.carrotPackages) {
-    const checkCarrotPackagesExist = await packageModel.find({
+    const packages = await packageModel.find({
       _id: { $in: data.carrotPackages },
     });
-    if (checkCarrotPackagesExist && checkCarrotPackagesExist.length > 0) {
+
+    if (!packages.length) {
       throw new AppError(404, 'Carrot Package Not Found');
     }
 
-    // Placeholder for payment check: you should implement the payment check here
-    // Example: check if payment is completed for the carrot package
-    const totalCarrots = checkCarrotPackagesExist.reduce(
-      (acc: number, curr: any) => acc + curr.numberOfCarrot,
-      0
-    )
-    if (isHeHasEnoughCarrots && isHeHasEnoughCarrots.totalCarrots >= 0) {
-      isHeHasEnoughCarrots.totalCarrots = Number(
-        isHeHasEnoughCarrots.totalCarrots + totalCarrots
-      );
+    // Check if user has paid for each package
+    for (const carrotPackage of data.carrotPackages) {
+      const packageExist = await packageModel.findById(carrotPackage);
+      await NotFound(packageExist, 'Package not found');
+
+      const paid = await TransactionModel.findOne({
+        user: user._id,
+        package: carrotPackage,
+      });
+      if (!paid) {
+        throw new AppError(400, 'You have not paid for this package');
+      }
     }
-    else {
-      throw new AppError(400, 'You do not have enough carrots');
-    }
+
+    // Sum up total carrots from packages safely
+    const totalCarrotsFromPackages = packages.reduce((acc: number, curr: any) => {
+      const num = Number(curr.numberOfCarrot);
+      return acc + (isNaN(num) ? 0 : num);
+    }, 0);
+
+    // Update user's total carrots safely
+    user.totalCarrots = (Number(user.totalCarrots) || 0) + totalCarrotsFromPackages;
   }
 
-  // Update isHeHasEnoughCarrots brought first time record trac
-  isHeHasEnoughCarrots.isHeBroughtFirstTime = true;
-
-  // Save the final changes to the user's carrots
-  await isHeHasEnoughCarrots?.save();
-
-  // Check if the collection already exists
+  
+  // Check if collection already exists
   const isExistAlready = await CollectionModel.findOne({
+    user: data.user,
     $or: [
-      { skin: { $in: data.skin || [] } }, // Check if any of the data.skin IDs exist in the skin array
-      { carrotPackages: { $in: data.carrotPackages || [] } }, // Check if any of the data.carrotPackages IDs exist in the carrotPackages array
-      { PowerUps: { $in: data.PowerUps || [] } }, // Check if any of the data.PowerUps IDs exist in the PowerUps array
+      { skin: { $in: data.skin || [] } },
+      { carrotPackages: { $in: data.carrotPackages || [] } },
+      { PowerUps: { $in: data.PowerUps || [] } },
     ],
   });
-
-  // Handle already existing collection
+  
   await AlreadyExist(isExistAlready);
+  // Mark that the user has brought first time
+  user.isHeBroughtFirstTime = true;
 
+  // Save user updates
+  await user.save();
+
+  // Create and return new collection
   return await CollectionModel.create(data);
 };
+
 
 //update collection
 const updateCollection = async (
@@ -117,165 +124,119 @@ const updateCollection = async (
   data: Partial<Icollection> | any
 ) => {
   // Find the user by ID
-  let isHeHasEnoughCarrots: any = await User.findById(data.user);
-  await NotFound(isHeHasEnoughCarrots, 'User Not Found');
+  const user:any = await User.findById(data.user);
+  await NotFound(user, 'User Not Found');
 
-  //check  the collection has for this user
-  const isExistAlready = await CollectionModel.findOne({ user: data.user });
-  await NotFound(isExistAlready, 'Collection Not Found For This User');
+  // Check if the collection exists for this user
+  const collection = await CollectionModel.findOne({ user: data.user });
+  await NotFound(collection, 'Collection Not Found For This User');
 
-  let UpdatedData: Partial<Icollection> = {};
+  const UpdatedData: Partial<Icollection> = {};
 
   // Handle skin addition
   if (data.skin && data.skin.length > 0) {
-    // Check if each skin exists in the database
-    const checkSkinsExist: any = await ContentModel.find({
-      _id: { $in: data.skin },
-    });
-    const totalCarrots = checkSkinsExist.reduce(
-      (acc: number, curr: any) => acc + curr.numberOfCarrot,
-      0
-    )
-    if (
-      checkSkinsExist &&
-      checkSkinsExist.length > 0 &&
-      isHeHasEnoughCarrots &&
-      isHeHasEnoughCarrots.totalCarrots > 0 &&
-      totalCarrots <= isHeHasEnoughCarrots.totalCarrots
-    ) {
+    const skins = await ContentModel.find({ _id: { $in: data.skin } });
 
-      isHeHasEnoughCarrots.totalCarrots = Number(
-        isHeHasEnoughCarrots.totalCarrots - totalCarrots
-      );
-    } else {
-      if (checkSkinsExist.length <= 0) {
-        throw new Error('One or more skins not found');
-      }
+    if (skins.length !== data.skin.length) {
+      throw new Error('One or more skins not found');
     }
-    // Add the skins to UpdatedData using $addToSet (ensure no duplicates)
+
+    const totalCarrots = skins.reduce(
+      (acc: number, curr: any) => acc + Number(curr.numberOfCarrot || 0),
+      0
+    );
+
+    if (totalCarrots > (Number(user.totalCarrots) || 0)) {
+      throw new Error('Not enough carrots for selected skins');
+    }
+
+    user.totalCarrots = (Number(user.totalCarrots) || 0) - totalCarrots;
     UpdatedData.skin = data.skin;
   }
 
   // Handle PowerUps addition
   if (data.PowerUps && data.PowerUps.length > 0) {
-    // Check if each PowerUp exists in the database
-    const checkPowerUpsExist: any = await ContentModel.find({
-      _id: { $in: data.PowerUps },
-    });
+    const powerUps = await ContentModel.find({ _id: { $in: data.PowerUps } });
 
-    const totalCarrots = checkPowerUpsExist.reduce(
-      (acc: number, curr: any) => acc + curr.numberOfCarrot,
-      0
-    )
-    if (
-      checkPowerUpsExist.length > 0 &&
-      isHeHasEnoughCarrots &&
-      isHeHasEnoughCarrots.totalCarrots > 0 &&
-     totalCarrots <= isHeHasEnoughCarrots.totalCarrots
-    ) {
-      isHeHasEnoughCarrots.totalCarrots = Number(
-        isHeHasEnoughCarrots.totalCarrots - totalCarrots
-      );
-    } else {
-      if (checkPowerUpsExist.length <= 0) {
-        throw new Error('One or more skins not found');
-      }
+    if (powerUps.length !== data.PowerUps.length) {
+      throw new Error('One or more PowerUps not found');
     }
-    // Add the PowerUps to UpdatedData
+
+    const totalCarrots = powerUps.reduce(
+      (acc: number, curr: any) => acc + Number(curr.numberOfCarrot || 0),
+      0
+    );
+
+    if (totalCarrots > (Number(user.totalCarrots) || 0)) {
+      throw new Error('Not enough carrots for selected PowerUps');
+    }
+
+    user.totalCarrots = (Number(user.totalCarrots) || 0) - totalCarrots;
     UpdatedData.PowerUps = data.PowerUps;
   }
 
   // Handle carrotPackages addition
   if (data.carrotPackages && data.carrotPackages.length > 0) {
-    // Check if each Carrot Package exists in the database
-    const checkCarrotPackagesExist = await packageModel.find({
+    const packages = await packageModel.find({
       _id: { $in: data.carrotPackages },
     });
 
-    const totalCarrots = checkCarrotPackagesExist.reduce(
-      (acc: number, curr: any) => acc + curr.numberOfCarrot,
+    if (packages.length !== data.carrotPackages.length) {
+      throw new Error('One or more carrot packages not found');
+    }
+
+    // Check payment for each package
+    for (const pkg of data.carrotPackages) {
+      const paid = await TransactionModel.findOne({
+        user: user._id,
+        package: pkg,
+        status: 'success',
+      });
+      if (!paid) {
+        throw new Error('You have not paid for package ' + pkg.toString());
+      }
+    }
+
+    const totalCarrots = packages.reduce(
+      (acc: number, curr: any) => acc + Number(curr.numberOfCarrot || 0),
       0
-    )
-    if (
-      checkCarrotPackagesExist.length > 0 &&
-      isHeHasEnoughCarrots &&
-      isHeHasEnoughCarrots.totalCarrots > 0 &&
-      totalCarrots <= isHeHasEnoughCarrots.totalCarrots
-    ) {
-      isHeHasEnoughCarrots.totalCarrots = Number(
-        isHeHasEnoughCarrots.totalCarrots + totalCarrots
-      );
-    }
+    );
 
-    if (checkCarrotPackagesExist.length <= 0) {
-      throw new Error('One or more skins not found');
-    }
-
-    /**
-     * here will be added payment checking or ensuring code for the package
-     *
-     */
-    // Add the carrot packages to UpdatedData
+    user.totalCarrots = (Number(user.totalCarrots) || 0) + totalCarrots;
     UpdatedData.carrotPackages = data.carrotPackages;
   }
 
-  // Save the final changes to the user's carrots
-  await isHeHasEnoughCarrots?.save();
+  // Save user's updated carrots
+  await user.save();
 
-  // Now update the collection in the database
-  const RESPONSE = await CollectionModel.findByIdAndUpdate(
+  // Update collection with $addToSet to avoid duplicates
+  const updatedCollection = await CollectionModel.findByIdAndUpdate(
     id,
-    { $addToSet: UpdatedData }, // Use $addToSet to avoid duplicates
+    { $addToSet: UpdatedData },
     { new: true, runValidators: true }
   );
 
-  if (!RESPONSE) {
+  if (!updatedCollection) {
     throw new Error('Collection not found');
   }
 
-  return RESPONSE;
+  return updatedCollection;
 };
+
 
 //get the all collection
-const getAllMyCollection = async (query: any, userId: string) => {
-  const limit = Number(query.limit) || 10;
-  const page = Number(query.page) || 1;
-  const skip = Number((page - 1) * limit);
-  const filters: Record<string, any> = {
-    user: userId,
-  };
+const getAllMyCollection = async ( userId: string) => {
+ 
 
-  if (query.type) {
-    if (query.type == 'skin') {
-      filters.skin = { $exists: true };
-    } else if (query.type == 'carrotPackages') {
-      filters.carrotPackages = { $exists: true };
-    } else if (query.type == 'PowerUps') {
-      filters.PowerUps = { $exists: true };
-    }
-  }
+ return await CollectionModel.find({ user: userId })
+    .populate(['skin', 'carrotPackages', 'PowerUps']).populate({
+      path: 'user',
+      model: 'User',
+      select: 'fullName email phone address profileImage role profileStatus totalCarrots lastLoginAt',
+    });
 
-  const data = await CollectionModel.find(filters)
-    .populate('skin carrotPackages PowerUps')
-    .skip(skip)
-    .limit(limit);
-  if (!data) {
-    throw new AppError(404, 'Collection Not Found');
-  }
-
-  //pagination data
-  const total = await CollectionModel.countDocuments(filters);
-  const totalPage = Math.ceil(total / limit);
-  return {
-    data,
-    meta: {
-      page,
-      limit,
-      total,
-      totalPage,
-    },
-  };
 };
+
 
 export const CollectionService = {
   createCollection,

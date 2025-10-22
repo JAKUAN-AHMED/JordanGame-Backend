@@ -60,78 +60,63 @@ const updateGameDashboard = async (
   user: string,
   data: Partial<IgameDashboard>
 ) => {
-  const existingGameDashboard:any = await GameDashboardModel.findOne({ user });
-  await NotFound(
-    existingGameDashboard,
-    'Game Dashboard Not Found For This User'
-  );
+  const existingGameDashboard: any = await GameDashboardModel.findOne({ user });
+  await NotFound(existingGameDashboard, 'Game Dashboard Not Found For This User');
 
-  // find user
-  let userData: any = await User.findById(user);
+  // Find user
+  const userData: any = await User.findById(user);
   await NotFound(userData, 'User Not Found');
 
-  // Prepare update data object
   const updateData: Partial<IgameDashboard> = {};
 
-  // Ensure carrot has and update carrot
-  if (userData && userData.totalCarrots && data.totalCarrots) {
-    userData.totalCarrots =
-      Number(userData.totalCarrots) + Number(data.totalCarrots);
+  // Always add totalCarrots
+  if (data.totalCarrots && Number(data.totalCarrots) > 0) {
+    userData.totalCarrots = (Number(userData.totalCarrots) || 0) + Number(data.totalCarrots);
     await userData.save();
+    updateData.totalCarrots = userData.totalCarrots;
   }
 
-  // Update user current game tag (only if badges exist)
-  if (
-    userData &&
-    userData.CurrentGametag &&
-    existingGameDashboard &&
-    existingGameDashboard.achievedBadges.length > 0
-  ) {
-    const length = existingGameDashboard.achievedBadges.length;
-    const id = existingGameDashboard.achievedBadges[length - 1];
-    const badge = await ContentModel.findById(id);
-    if (badge?.name) {
-      userData.CurrentGametag = badge.name;
-      await userData.save(); // ← Save userData
+  // Update current game tag if badges exist
+  if (existingGameDashboard.achievedBadges.length > 0) {
+    const lastBadgeId = existingGameDashboard.achievedBadges[existingGameDashboard.achievedBadges.length - 1];
+    const lastBadge = await ContentModel.findById(lastBadgeId);
+    if (lastBadge?.name) {
+      userData.CurrentGametag = lastBadge.name;
+      await userData.save();
     }
   }
 
-  // Update the high score (only if new score is higher)
-  if (
-    data?.highScoreInFt  &&
-    data.highScoreInFt > existingGameDashboard.highScoreInFt
-  ) {
+  // Update high score if higher than previous
+  if (data.highScoreInFt && data.highScoreInFt > existingGameDashboard.highScoreInFt) {
     updateData.highScoreInFt = data.highScoreInFt;
   }
 
-  // Update the number of games played
-  updateData.numberOfGamesPlayed = Number(existingGameDashboard.numberOfGamesPlayed) + 1;
+  // Increment number of games played
+  updateData.numberOfGamesPlayed = (Number(existingGameDashboard.numberOfGamesPlayed) || 0) + 1;
 
-  // Update the level based on high score
+  // Update level based on current high score
   const currentHighScore = updateData.highScoreInFt || existingGameDashboard.highScoreInFt;
   updateData.level = levelUpLogic(Number(currentHighScore));
 
-  // Include any other fields from data that should be updated
-  if (data.totalCarrots !== undefined) {
-    updateData.totalCarrots = data.totalCarrots;
-  }
-  if (data.achievedBadges) {
-    updateData.achievedBadges = data.achievedBadges;
+  // Append new badges if provided
+  if (data.achievedBadges && data.achievedBadges.length > 0) {
+    updateData.achievedBadges = [...new Set([...(existingGameDashboard.achievedBadges || []), ...data.achievedBadges])];
   }
 
   // Final update
-  const updatedData = await GameDashboardModel.findByIdAndUpdate(
+  const updatedDashboard = await GameDashboardModel.findByIdAndUpdate(
     existingGameDashboard._id,
     { $set: updateData },
     { new: true, runValidators: true }
   );
 
-  if (!updatedData) {
+  if (!updatedDashboard) {
     throw new Error('Game Dashboard not found for this user');
   }
 
-  return updatedData;
+  return updatedDashboard;
 };
+
 
 const watchAdsAndGetCarrots = async (user: string, adsWatched: number) => {
   const gameDashboard = await GameDashboardModel.findOne({ user });
@@ -211,10 +196,11 @@ const getLeaderboard = async (user: any, query: any) => {
   
   const total = filteredData.length;
   const totalPage = Math.ceil(total / limit);
-
+  const yourBestScore = await GameDashboardModel.findOne({ user }).sort({ highScoreInFt: -1 });
   return {
     data: paginatedData,
     todayLeaderboard,
+    yourBestScore,
     meta: {
       page,
       limit,

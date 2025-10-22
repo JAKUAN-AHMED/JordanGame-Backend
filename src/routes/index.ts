@@ -70,6 +70,10 @@ const apiRoutes = [
   {
     path:'/transaction',
     route:TransactionRotues
+  },
+  {
+    path:'/collections',
+    route:CollectionsRoutes
   }
 ];
 
