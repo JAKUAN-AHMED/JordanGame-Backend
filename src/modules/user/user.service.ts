@@ -88,7 +88,8 @@ const getAllUsers = async (query: any) => {
 
 
   const filters: Record<string, any> = {
-    isEmailVerified: true
+    isEmailVerified: true,
+    role: 'user',
   };
   if(query.name){
     filters.fullName={$regex:query.name,$options:'i'}
