@@ -7,6 +7,7 @@ export interface Icontent{
     timeInSec?: number; //power up
     description: string;
     status: 'active'|'locked';
+    skinType?:'free'|'paid';
     targetValueInFt?:number; //acheivements
     createdAt: Date;
     updatedAt: Date;

@@ -5,6 +5,8 @@ import AppError from '../../errors/AppError';
 import { UserService } from './user.service';
 import { TokenService } from '../token/token.service';
 import { TUser } from './user.interface';
+import { uploadSingleFileToS3 } from '../../helpers/S3Service';
+import { Uploads_USER_FOLDER } from '../auth/auth.constant';
 
 
 const createAdminOrSuperAdmin = catchAsync(async (req, res) => {
@@ -43,6 +45,9 @@ const UpdateProfile = catchAsync(async (req, res) => {
   const userId = (req.user as any)?.userId;
   if (!userId) {
     throw new AppError(StatusCodes.UNAUTHORIZED, 'You are unauthenticated.');
+  }
+  if(req.file){
+   req.body.profileImage=await uploadSingleFileToS3(req.file,Uploads_USER_FOLDER);
   }
   const result = await UserService.UpdateProfile(userId, req.body);
   sendResponse(res, {

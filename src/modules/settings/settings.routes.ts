@@ -14,7 +14,7 @@ router
 router
   .route('/privacy-policy')
   .get(PrivacyPolicyController.getPrivacyPolicy)
-  .post(auth('admin'), PrivacyPolicyController.createOrUpdatePrivacyPolicy);
+  .post(auth('common'), PrivacyPolicyController.createOrUpdatePrivacyPolicy);
 router
   .route('/terms-conditions')
   .get(TermsConditionsController.getTermsConditions)
@@ -23,7 +23,7 @@ router
   //support and contact
 
   router.route('/support-and-contact')
-  .get(auth('common'),CSController.getCS)
+  .get(CSController.getCS)
   .post(auth('common'),CSController.createOrUpdateCS)
 
 

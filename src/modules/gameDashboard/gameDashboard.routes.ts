@@ -20,8 +20,12 @@ router.route('/')
 router.route('/watch-ads-and-get-carrots')
 .post(auth('common'),GameDashboardController.watchAdsAndGetCarrots)
 
-router.route('/share-and-get-carrots')
-.post(auth('common'),GameDashboardController.shareAndGetCarrots)
+
+
+router.route('/share-and-get-skin')
+.post(auth('common'),GameDashboardController.shareAndGetSkin)
+
+
 
 //leaderboard
 router.route('/leaderboard')

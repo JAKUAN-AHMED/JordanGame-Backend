@@ -19,6 +19,14 @@ const createUser = async (userData: TUser) => {
   const existingUser = await User.findOne({ email: userData.email });
 
 
+
+  //check the phone number is exist or not
+
+  const isExistPhone = await User.findOne({ phone: userData.phone });
+  if (isExistPhone) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Phone number already taken');
+  }
+  
   if (existingUser) {
     if (existingUser.isEmailVerified) {
       throw new AppError(StatusCodes.BAD_REQUEST, 'Email already taken');
