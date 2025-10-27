@@ -166,6 +166,8 @@ const shareAndGetSkin = async (user: string) => {
     category: 'skin',
     skinType: 'free',
   });
+
+  
   //get all free skin
   const availableSkins =collectionData && collectionData.skin?.filter((skin: any,idx: number) => {
     return getFreeSkin[idx]._id.toString() !== skin._id.toString();
