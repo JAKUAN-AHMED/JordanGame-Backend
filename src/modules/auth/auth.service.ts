@@ -59,7 +59,7 @@ const createUser = async (userData: TUser) => {
   const verificationToken = await TokenService.createVerifyEmailToken(user);
   //create verification email otp
   const otopDoc=await OtpService.createVerificationEmailOtp(user.email);
-  return { verificationToken,otp:otopDoc.otp,userData:rest };
+  return { verificationToken,userData:rest };
 };
 
 const login = async (email: string, reqpassword: string) => {
@@ -150,7 +150,7 @@ const forgotPassword = async (email: string) => {
  const otopDoc=await OtpService.createResetPasswordOtp(user.email);
   user.isResetPassword = true;
   await user.save();
-  return { resetPasswordToken,otp:otopDoc.otp };
+  return { resetPasswordToken };
 };
 
 const resendOtp = async (email: string) => {
