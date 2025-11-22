@@ -16,7 +16,7 @@ app.use(Morgan.successHandler);
 app.use(Morgan.errorHandler);
 
 export const corsOptions = {
-  origin: true,
+  origin: ['https://admin.rhrunnerapp.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
